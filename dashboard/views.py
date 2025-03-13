@@ -11,26 +11,5 @@ def dashboard_home(request):
 
     # Model isimlerini doğrudan almak için güncellendi (s eklenmeyecek)
     model_names = [model._meta.object_name for model in models]
-
+    print(model_names)
     return render(request, 'dashboard/index.html', {'model_names': model_names})
-
-
-def model_data(request, model):
-    try:
-        model_class = apps.get_model('customs_general', model)
-    except LookupError:
-        return render(request, 'dashboard/model_not_found.html', {'model': model})
-
-    # Tüm nesneleri al
-    objects = model_class.objects.all()
-
-    # Alan isimleri ve field adlarını birlikte al
-    field_names = [field.verbose_name for field in model_class._meta.fields]
-    field_keys = [field.name for field in model_class._meta.fields]  # Alanların teknik adları
-
-    return render(request, 'dashboard/model_data.html', {
-        'model': model,
-        'objects': objects,
-        'field_names': field_names,
-        'field_keys': field_keys,  # Alan isimleri için ayrı key listesi
-    })

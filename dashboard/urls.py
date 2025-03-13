@@ -1,9 +1,8 @@
-from django.urls import path
-
-from .views import dashboard_home, model_data
+from django.urls import path, include
+from .views import dashboard_home
 
 urlpatterns = [
     path('', dashboard_home, name='dashboard_home'),
-    path('model-data/<str:model>/', model_data, name='model_data'),
-
+    path('customs-general/', include('customs_general.urls', namespace='customs_general')),  # Custom General URL'leri buraya bağladık!
 ]
+

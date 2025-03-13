@@ -59,9 +59,9 @@ class AntiDumpingCompany(models.Model):
 
 # Gümrük İdareleri ve Saymanlık Kodları
 class CustomsOffice(models.Model):
-    customs_code = models.CharField(max_length=10, unique=True)
+    customs_code = models.CharField(max_length=50, unique=False)
     customs_name = models.CharField(max_length=255)
-    treasury_code = models.CharField(max_length=10, unique=True)
+    treasury_code = models.CharField(max_length=50, unique=False)
     treasury_name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -188,7 +188,7 @@ class ContainerCode(models.Model):
 # Döviz Cinsi Kodları
 class CurrencyType(models.Model):
     code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=150)
 
     def __str__(self):
         return f"{self.code} - {self.name}"

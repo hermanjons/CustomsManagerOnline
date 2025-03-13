@@ -1,0 +1,121 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+    <div style="margin-bottom: 10px;">
+        <!-- Excel Yükleme Butonu -->
+        <button id="openExcelModal" class="button" style="background:green; color:white; padding:10px; border-radius:5px;">
+            📤 Excel ile Yükle
+        </button>
+    </div>
+
+    <!-- Pop-up (Modal) -->
+    <div id="excelUploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Excel Dosyanızı Yükleyin</h2>
+
+            <form id="excelUploadForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="excel_file" id="excelFileInput" accept=".csv, .xlsx" required>
+                <br><br>
+                <button type="submit" class="button">📤 Yükle</button>
+            </form>
+
+            <div id="uploadMessage" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    {{ block.super }}
+
+    <!-- JavaScript ile Modal Aç/Kapat ve AJAX Yükleme -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var modal = document.getElementById("excelUploadModal");
+        var btn = document.getElementById("openExcelModal");
+        var span = document.getElementsByClassName("close")[0];
+        var form = document.getElementById("excelUploadForm");
+        var messageDiv = document.getElementById("uploadMessage");
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+        };
+
+        span.onclick = function() {
+            modal.style.display = "none";
+            messageDiv.innerHTML = "";  // Mesajları temizle
+        };
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+                messageDiv.innerHTML = "";
+            }
+        };
+
+        form.onsubmit = function(event) {
+            event.preventDefault();
+
+            var formData = new FormData(form);
+
+            // Model bilgisini al
+            var modelName = "{{ model_name }}";
+
+            fetch(`/customs_general/upload-excel/${modelName}/`, {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.innerHTML = "<span style='color:green;'>✅ " + data.message + "</span>";
+                } else {
+                    messageDiv.innerHTML = "<span style='color:red;'>❌ Hata: " + data.error + "</span>";
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = "<span style='color:red;'>❌ Bir hata oluştu!</span>";
+            });
+        };
+    });
+</script>
+
+
+    <style>
+        /* Modal Stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover, .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
