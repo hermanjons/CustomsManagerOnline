@@ -96,6 +96,7 @@
             <a href="{% url 'customs_general:model_data' model=model.model %}">
                 {{ model.icon }} {{ model.display_name }}
             </a>
+
         {% empty %}
             <a href="#">❌ Tanımlı model bulunamadı.</a>
         {% endfor %}

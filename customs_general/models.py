@@ -29,12 +29,11 @@ class TransactionType(models.Model):
 
 # Uluslararası Liman Kodları
 class Port(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=30)
     name = models.CharField(max_length=100)
-    country = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.code} - {self.name} ({self.country})"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "Uluslararası Liman Kodları"

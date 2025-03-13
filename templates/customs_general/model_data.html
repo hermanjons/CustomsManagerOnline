@@ -1,32 +1,42 @@
-
-
 {% extends "base.html" %}
 {% load custom_filters %}
 
-{% block title %}{{ model }} Verileri{% endblock %}
+{% block title %}
+    {{ model_icon }} {{ model_display_name }} Verileri
+{% endblock %}
 
 {% block content %}
-    <h2>📌 {{ model|title }} Verileri</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                {% for field in field_names %}
-                    <th>{{ field }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for object in objects %}
+    <h2>{{ model_icon }} {{ model_display_name }}</h2>
+
+    <!-- Arama Formu -->
+    <form method="GET" action="" class="mb-3">
+        <input type="text" name="q" class="form-control" placeholder="Ara..." value="{{ query }}">
+        <button type="submit" class="btn btn-primary mt-2">🔍 Ara</button>
+        {% if query %}
+            <a href="{% url 'customs_general:model_data' model=model %}" class="btn btn-secondary mt-2">❌ Temizle</a>
+        {% endif %}
+    </form>
+
+    {% if objects %}
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    {% for key in field_keys %}
-                        <td>{{ object|getattr_custom:key }}</td>
+                    {% for field in field_names %}
+                        <th>{{ field }}</th>
                     {% endfor %}
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="{{ field_names|length }}" class="text-center">Bu modelde veri bulunamadı.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for object in objects %}
+                    <tr>
+                        {% for key in field_keys %}
+                            <td>{{ object|getattr_custom:key }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-center">Bu modelde eşleşen veri bulunmuyor.</p>
+    {% endif %}
 {% endblock %}

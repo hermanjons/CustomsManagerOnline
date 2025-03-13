@@ -4,31 +4,46 @@ import pandas as pd
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages, admin
 from django.contrib.admin.views.decorators import staff_member_required
-
-from django.apps import apps
+from .constants import MODEL_ICONS
+from django.shortcuts import render
+from django.db.models import Q
 
 
 
 def model_data(request, model):
     try:
-        model_class = apps.get_model('customs_general', model)
+        model_class = apps.get_model("customs_general", model)
     except LookupError:
-        return render(request, 'customs_general/model_not_found.html', {'model': model})
+        return render(request, "customs_general/model_not_found.html", {"model": model})
 
-    objects = model_class.objects.all()
+    # Kullanıcı dostu model ismi ve ikon belirleme
+    model_display_name = model_class._meta.verbose_name
+    model_icon = MODEL_ICONS.get(model, "❓")
+
+    # Arama işlemi
+    query = request.GET.get("q", "").strip()  # Kullanıcıdan gelen arama terimi
+    objects = model_class.objects.all()  # Varsayılan olarak tüm kayıtları getiriyoruz
+
+    if query:
+        search_filters = Q()
+        for field in model_class._meta.fields:
+            if field.get_internal_type() in ["CharField", "TextField"]:
+                search_filters |= Q(**{f"{field.name}__icontains": query})  # Case-insensitive arama
+
+        objects = objects.filter(search_filters)
+
+    # Modelin field bilgilerini al
     field_names = [field.verbose_name for field in model_class._meta.fields]
     field_keys = [field.name for field in model_class._meta.fields]
 
-    # Tüm modelleri tekrar alarak model_names değişkenini ekleyelim
-    models = apps.get_app_config('customs_general').get_models()
-    model_names = [model._meta.object_name for model in models]
-
-    return render(request, 'customs_general/model_data.html', {
-        'model': model,
-        'objects': objects,
-        'field_names': field_names,
-        'field_keys': field_keys,
-        'model_names': model_names,  # Model isimlerini template'e ekledik
+    return render(request, "customs_general/model_data.html", {
+        "model": model,
+        "model_display_name": model_display_name,
+        "model_icon": model_icon,
+        "objects": objects,
+        "field_names": field_names,
+        "field_keys": field_keys,
+        "query": query,  # Arama kutusuna girilen değerin korunması için
     })
 
 
