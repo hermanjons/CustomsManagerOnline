@@ -5,6 +5,9 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib import messages, admin
 from django.contrib.admin.views.decorators import staff_member_required
 
+from django.apps import apps
+
+
 
 def model_data(request, model):
     try:
@@ -67,7 +70,8 @@ def upload_excel(request, model):
                 for column in df.columns:
                     if column not in field_names:
                         print(f"Hata: Geçersiz sütun - {column}")
-                        return JsonResponse({"success": False, "error": f"Geçersiz sütun: {column}. Beklenen sütunlar: {field_names}"})
+                        return JsonResponse(
+                            {"success": False, "error": f"Geçersiz sütun: {column}. Beklenen sütunlar: {field_names}"})
 
                 # Verileri veritabanına ekleme işlemi
                 new_objects = []

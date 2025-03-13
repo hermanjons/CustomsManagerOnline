@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard{% endblock %}</title>
+
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
     <style>
         body {
@@ -24,24 +29,32 @@
             transition: all 0.3s;
             overflow-y: auto;
         }
+        .sidebar h4 {
+            text-align: center;
+            font-size: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #495057;
+        }
         .sidebar a {
             color: white;
             text-decoration: none;
-            display: block;
-            padding: 10px;
+            display: flex;
+            align-items: center;
+            padding: 12px;
             border-radius: 5px;
             transition: background 0.3s, transform 0.2s;
             cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
         }
         .sidebar a:hover {
             background: #28a745;
             transform: translateX(5px);
         }
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-            flex-grow: 1;
-            width: 100%;
+        .sidebar .material-icons {
+            font-size: 22px;
+            margin-right: 12px;
+            color: #f1c40f; /* Altın Sarısı */
         }
         .submenu {
             display: none;
@@ -49,28 +62,50 @@
         }
         .submenu a {
             font-size: 14px;
-            padding: 5px 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .submenu a:hover {
+            background: #198754;
+        }
+        .content {
+            margin-left: 260px;
+            padding: 20px;
+            flex-grow: 1;
+            width: 100%;
+            background-color: white;
+            border-left: 1px solid #ddd;
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar (Navbar) -->
+    <!-- Sidebar (Menü) -->
     <div class="sidebar">
-        <h4>📌 Menü</h4>
-        <a href="{% url 'dashboard_home' %}">🏠 Ana Sayfa</a>
-        <a href="#" id="toggleGeneralDefinitions">📂 Genel Tanımlamalar ⬇</a>
-        <div class="submenu" id="generalDefinitionsList">
-            {% for model in model_names %}
-                <a href="{% url 'customs_general:model_data' model=model %}">{{ model }}</a>
-            {% empty %}
-                <a href="#">Tanımlı model bulunamadı.</a>
-            {% endfor %}
-        </div>
-        <a href="#">⚓ Limanlar</a>
-        <a href="#">💰 Vergi Kodları</a>
-        <a href="#">🏦 Banka Kodları</a>
+    <h4>📌 Ana Menü</h4>
+    <a href="{% url 'dashboard_home' %}">🏠 Ana Sayfa</a>
+
+    <!-- Genel Tanımlamalar -->
+    <a href="#" id="toggleGeneralDefinitions">
+        📂 Genel Tanımlamalar ⬇
+    </a>
+    <div class="submenu" id="generalDefinitionsList">
+        {% for model in models %}
+            <a href="{% url 'customs_general:model_data' model=model.model %}">
+                {{ model.icon }} {{ model.display_name }}
+            </a>
+        {% empty %}
+            <a href="#">❌ Tanımlı model bulunamadı.</a>
+        {% endfor %}
     </div>
+
+    <a href="#">⚓ Limanlar</a>
+    <a href="#">💰 Vergi Kodları</a>
+    <a href="#">🏦 Banka Kodları</a>
+</div>
+
 
     <!-- İçerik Alanı -->
     <div class="content">
@@ -84,6 +119,12 @@
                 $("#generalDefinitionsList").slideToggle();
             });
         });
+    </script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        twemoji.parse(document.body); // Sayfadaki tüm emojileri Twemoji formatına dönüştür
+    });
     </script>
 
 </body>
