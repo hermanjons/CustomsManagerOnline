@@ -7,7 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from .constants import MODEL_ICONS
 from django.shortcuts import render
 from django.db.models import Q
-
+from django.core.paginator import Paginator
 
 
 def model_data(request, model):
@@ -32,6 +32,18 @@ def model_data(request, model):
 
         objects = objects.filter(search_filters)
 
+    # Kullanıcının belirlediği sayfa başına gösterilecek veri miktarını al
+    per_page = request.GET.get("per_page", 10)  # Varsayılan olarak 10 değer göster
+    try:
+        per_page = int(per_page) if int(per_page) in [10, 25, 50, 100] else 10
+    except ValueError:
+        per_page = 10  # Geçersiz giriş olursa varsayılan 10
+
+    # Sayfalama işlemi
+    paginator = Paginator(objects, per_page)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     # Modelin field bilgilerini al
     field_names = [field.verbose_name for field in model_class._meta.fields]
     field_keys = [field.name for field in model_class._meta.fields]
@@ -40,10 +52,11 @@ def model_data(request, model):
         "model": model,
         "model_display_name": model_display_name,
         "model_icon": model_icon,
-        "objects": objects,
+        "page_obj": page_obj,  # Sayfalama nesnesini template'e gönder
         "field_names": field_names,
         "field_keys": field_keys,
         "query": query,  # Arama kutusuna girilen değerin korunması için
+        "per_page": per_page,  # Sayfa başına gösterilecek öğe sayısı
     })
 
 
