@@ -55,7 +55,7 @@ class PaymentMethod(models.Model):
 
 # Tamamlayıcı Bilgi Kodları
 class AdditionalInfoCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
     value = models.CharField(max_length=255)
 
@@ -69,7 +69,7 @@ class AdditionalInfoCode(models.Model):
 
 # Anti-Damping Vergisi Üreticisi Gönderici Firma Kodları
 class AntiDumpingCompany(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -125,7 +125,7 @@ class InternationalAgreement(models.Model):
 
 # Basitleştirilmiş Usul Kodları
 class SimplifiedProcedure(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=100)
     description = models.CharField(max_length=255)
 
     def __str__(self):
@@ -138,7 +138,7 @@ class SimplifiedProcedure(models.Model):
 
 # Liman Kodları
 class Harbor(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -164,7 +164,7 @@ class MeasurementUnit(models.Model):
 
 # Muafiyet Kodları
 class ExemptionCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
 
     def __str__(self):
@@ -281,7 +281,7 @@ class CurrencyType(models.Model):
 
 # Ülke Kodları
 class Country(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -337,11 +337,20 @@ class Depot(models.Model):
 
 # Banka Kodları
 class Bank(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
+    swift_code = models.CharField(max_length=50)
+    bank_name = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=40)
+    fax_number = models.CharField(max_length=100)
+    web_address = models.CharField(max_length=255)
+    kep_address = models.CharField(max_length=100)
+    eft_number = models.CharField(max_length=100)
+
 
     def __str__(self):
-        return f"{self.code} - {self.name}"
+        return f"{self.swift_code} - {self.bank_name} / {self.address} - {self.phone_number}" \
+               f"{self.fax_number} - {self.web_address} / {self.kep_address} - {self.eft_number}"
+
 
     class Meta:
         verbose_name = "Banka Kodları"
