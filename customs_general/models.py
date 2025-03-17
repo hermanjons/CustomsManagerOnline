@@ -355,3 +355,20 @@ class Bank(models.Model):
     class Meta:
         verbose_name = "Banka Kodları"
         verbose_name_plural = "Banka Kodları"
+
+
+class BankBranches(models.Model):
+    bank_connection = models.ForeignKey(Bank, on_delete=models.CASCADE, max_length=100)
+    branches_number = models.CharField(max_length=50)
+    branches_name = models.CharField(max_length=255)
+    branch_acc_number = models.CharField(max_length=255)
+
+
+    def __str__(self):
+        return f"{self.branches_number} - {self.branches_name} / {self.branch_acc_number} - {self.bank_connection}" \
+
+
+
+    class Meta:
+        verbose_name = "Banka şubeleri"
+        verbose_name_plural = "Banka şubeleri"
