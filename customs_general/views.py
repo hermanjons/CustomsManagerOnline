@@ -72,14 +72,14 @@ def upload_excel(request, model):
             print("POST isteği alındı!")
 
             if "excel_file" not in request.FILES:
-                print("Hata: Excel dosyası yüklenmedi!")
-                return JsonResponse({"success": False, "error": "Excel dosyası yüklenmedi!"})
+                print("Hata: Excel dosyası eksik!")
+                return JsonResponse({"success": False, "error": "Excel dosyası eksik!"})
 
             excel_file = request.FILES["excel_file"]
             print(f"Yüklenen dosya: {excel_file.name}")
 
             try:
-                # Excel veya CSV dosyasını okuma
+                # ✅ Excel veya CSV dosyasını oku
                 if excel_file.name.endswith(".csv"):
                     df = pd.read_csv(excel_file)
                     print("CSV dosyası okundu.")
@@ -90,21 +90,28 @@ def upload_excel(request, model):
                     print("Hata: Geçersiz dosya formatı!")
                     return JsonResponse({"success": False, "error": "Sadece .csv ve .xlsx dosyaları kabul edilir."})
 
-                # Modelin field isimlerini al (id hariç)
+                # ✅ Modelin alanlarını al
                 field_names = [field.name for field in model_class._meta.fields if field.name != "id"]
                 print(f"Model field'ları: {field_names}")
 
-                # Excel dosyasındaki kolon isimlerini doğrula
-                for column in df.columns:
-                    if column not in field_names:
-                        print(f"Hata: Geçersiz sütun - {column}")
-                        return JsonResponse(
-                            {"success": False, "error": f"Geçersiz sütun: {column}. Beklenen sütunlar: {field_names}"})
+                # ✅ Eğer model BankBranches ise ForeignKey ilişkisini kur
+                if model.lower() == "bankbranches" and "bank_connection" in df.columns:
+                    Bank = apps.get_model("customs_general", "Bank")  # Bank modelini çek
 
-                # Verileri veritabanına ekleme işlemi
+                    # `bank_connection` ID değerini Bank instance'a çeviriyoruz
+                    df["bank_connection"] = df["bank_connection"].apply(
+                        lambda x: Bank.objects.get(id=int(x)) if pd.notna(x) else None
+                    )
+
+                # ✅ Verileri veritabanına ekleme işlemi
                 new_objects = []
                 for _, row in df.iterrows():
                     obj_data = {field: row[field] for field in field_names}
+
+                    # ForeignKey için özel işlem
+                    if model.lower() == "bankbranches":
+                        obj_data["bank_connection"] = row["bank_connection"]
+
                     new_objects.append(model_class(**obj_data))
 
                 model_class.objects.bulk_create(new_objects)
