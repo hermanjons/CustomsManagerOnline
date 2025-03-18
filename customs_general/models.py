@@ -412,4 +412,16 @@ class BankBranches(models.Model):
         verbose_name = "Banka şubeleri"
         verbose_name_plural = "Banka şubeleri"
 
-# Country modeli ile ilişkili
+
+class QuantityType(models.Model):
+    name = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=255)
+    code_2 = models.CharField(max_length=255)
+    edi_code = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f"{self.name} - {self.code} / {self.code_2} - {self.edi_code}"
+
+    class Meta:
+        verbose_name = "Miktar Cinsleri"
+        verbose_name_plural = "Miktar cinsleri"
