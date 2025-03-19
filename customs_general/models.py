@@ -80,6 +80,18 @@ class PaymentMethod(models.Model):
         verbose_name_plural = "Ödeme Şekilleri"
 
 
+class PaymentType(models.Model):
+    code = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+    class Meta:
+        verbose_name = "Ödeme Tipleri"
+        verbose_name_plural = "Ödeme Tipleri"
+
+
 # Tamamlayıcı Bilgi Kodları
 class AdditionalInfoCode(models.Model):
     code = models.CharField(max_length=255)
@@ -231,11 +243,11 @@ class ExemptionCode(models.Model):
 
 # belge kodları
 class RequiredDocument(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    description = models.CharField(max_length=255)
+    code = models.CharField(max_length=70)
+    name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.code} - {self.description}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "İstenen Döküman Kodları"
@@ -283,8 +295,8 @@ class DeliveryMethod(models.Model):
 
 # Güncel Vergi Kodları
 class TaxCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    description = models.CharField(max_length=255)
+    code = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.code} - {self.description}"
@@ -311,11 +323,11 @@ class TransportType(models.Model):
 
 # Kap Kodları
 class ContainerCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    description = models.CharField(max_length=255)
+    code = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.code} - {self.description}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "Kap Kodları"
@@ -352,7 +364,6 @@ class RegimeCode(models.Model):
 class Warehouse(models.Model):
     warehouse_code = models.CharField(max_length=10)
     warehouse_name = models.CharField(max_length=255)
-
 
     def __str__(self):
         return f"{self.warehouse_code} - {self.warehouse_name}"
@@ -429,7 +440,6 @@ class QuantityType(models.Model):
 class CustomerType(models.Model):
     name = models.CharField(max_length=10, unique=True)
     code = models.CharField(max_length=255)
-
 
     def __str__(self):
         return f"{self.name} - {self.code}"

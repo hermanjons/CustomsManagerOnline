@@ -8,7 +8,7 @@ from .constants import MODEL_ICONS
 from django.shortcuts import render
 from django.db.models import Q
 from django.core.paginator import Paginator
-
+from django.db import models
 
 def model_data(request, model):
     try:
@@ -90,32 +90,41 @@ def upload_excel(request, model):
                     print("Hata: Geçersiz dosya formatı!")
                     return JsonResponse({"success": False, "error": "Sadece .csv ve .xlsx dosyaları kabul edilir."})
 
-                # ✅ Modelin alanlarını al
+                # ✅ Modelin tüm alanlarını al, ancak ForeignKey olanları ayrıca işaretle
                 field_names = [field.name for field in model_class._meta.fields if field.name != "id"]
+                foreign_keys = {
+                    field.name: field.remote_field.model
+                    for field in model_class._meta.fields
+                    if isinstance(field, models.ForeignKey)
+                }
+
                 print(f"Model field'ları: {field_names}")
+                print(f"ForeignKey alanları: {foreign_keys}")
 
-                # ✅ Eğer model BankBranches ise ForeignKey ilişkisini kur
-                if model.lower() == "bankbranches" and "bank_connection" in df.columns:
-                    Bank = apps.get_model("customs_general", "Bank")  # Bank modelini çek
+                # ✅ Excel dosyasındaki kolon isimlerini doğrula
+                for column in df.columns:
+                    if column not in field_names:
+                        print(f"Hata: Geçersiz sütun - {column}")
+                        return JsonResponse(
+                            {"success": False, "error": f"Geçersiz sütun: {column}. Beklenen sütunlar: {field_names}"}
+                        )
 
-                    # `bank_connection` ID değerini Bank instance'a çeviriyoruz
-                    df["bank_connection"] = df["bank_connection"].apply(
-                        lambda x: Bank.objects.get(id=int(x)) if pd.notna(x) else None
-                    )
+                # ✅ ForeignKey alanları için ID yerine instance atanmasını sağla
+                for fk_field, fk_model in foreign_keys.items():
+                    if fk_field in df.columns:
+                        print(f"ForeignKey dönüşümü başlatılıyor: {fk_field} -> {fk_model.__name__}")
+                        df[fk_field] = df[fk_field].apply(
+                            lambda x: fk_model.objects.get(id=int(x)) if pd.notna(x) else None
+                        )
 
                 # ✅ Verileri veritabanına ekleme işlemi
                 new_objects = []
                 for _, row in df.iterrows():
                     obj_data = {field: row[field] for field in field_names}
-
-                    # ForeignKey için özel işlem
-                    if model.lower() == "bankbranches":
-                        obj_data["bank_connection"] = row["bank_connection"]
-
                     new_objects.append(model_class(**obj_data))
 
                 model_class.objects.bulk_create(new_objects)
-                print(f"{len(new_objects)} kayıt eklendi!")
+                print(f"{len(new_objects)} kayıt başarıyla eklendi!")
 
                 return JsonResponse({"success": True, "message": f"{len(new_objects)} kayıt başarıyla eklendi!"})
 
@@ -129,3 +138,4 @@ def upload_excel(request, model):
     except Exception as e:
         print(f"Genel Hata: {e}")
         return JsonResponse({"success": False, "error": str(e)})
+
