@@ -425,3 +425,16 @@ class QuantityType(models.Model):
     class Meta:
         verbose_name = "Miktar Cinsleri"
         verbose_name_plural = "Miktar cinsleri"
+
+
+class CustomerType(models.Model):
+    name = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=255)
+
+
+    def __str__(self):
+        return f"{self.name} - {self.code}"
+
+    class Meta:
+        verbose_name = "Müşteri tipleri"
+        verbose_name_plural = "Müşteri tipleri"
