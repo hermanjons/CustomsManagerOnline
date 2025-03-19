@@ -352,11 +352,10 @@ class RegimeCode(models.Model):
 class Warehouse(models.Model):
     warehouse_code = models.CharField(max_length=10)
     warehouse_name = models.CharField(max_length=255)
-    customs_name = models.CharField(max_length=255)
-    customs_code = models.CharField(max_length=10)
+
 
     def __str__(self):
-        return f"{self.warehouse_code} - {self.warehouse_name} / {self.customs_code} - {self.customs_name}"
+        return f"{self.warehouse_code} - {self.warehouse_name}"
 
     class Meta:
         verbose_name = "Ambar Kodları"
@@ -365,13 +364,13 @@ class Warehouse(models.Model):
 
 # Antrepo Kodları
 class Depot(models.Model):
-    depot_code = models.CharField(max_length=10, unique=True)
+    depot_code = models.CharField(max_length=60)
     depot_name = models.CharField(max_length=255)
-    customs_name = models.CharField(max_length=255)
-    customs_code = models.CharField(max_length=10)
+    customs_number = models.ForeignKey(CustomsOffice, on_delete=models.CASCADE)
+    warehouse_code = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.depot_code} - {self.depot_name} / {self.customs_code} - {self.customs_name}"
+        return f"{self.depot_code} - {self.depot_name} / {self.customs_number} - {self.warehouse_code}"
 
     class Meta:
         verbose_name = "Antrepo Kodları"
