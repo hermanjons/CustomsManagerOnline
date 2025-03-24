@@ -6,6 +6,7 @@ from django.apps import apps
 
 
 class CustomAdmin(admin.ModelAdmin):
+
     change_list_template = "admin/excel_upload.html"
 
     def changelist_view(self, request, extra_context=None):
@@ -19,7 +20,7 @@ class CustomAdmin(admin.ModelAdmin):
 
         model_name = self.model._meta.model_name
         try:
-            upload_excel_url = reverse('admin:admin_upload_excel', args=[model_name])
+            upload_excel_url = reverse(f'admin:admin_upload_excel_{model_name}')
             print(f"Oluşturulan Excel URL'si: {upload_excel_url}")
         except Exception as e:
             print(f"URL oluşturulurken hata oluştu: {e}")
@@ -35,13 +36,21 @@ class CustomAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
+        model_name = self.model._meta.model_name  # 👈 Hangi modeldeyiz
+        app_label = self.model._meta.app_label  # 👈 Hangi app'teyiz
+
         custom_urls = [
-            path('upload-excel/<str:model>/', self.redirect_to_upload_excel, name="admin_upload_excel"),
+            path(
+                f'upload-excel/',
+                self.redirect_to_upload_excel,
+                name=f'admin_upload_excel_{model_name}'  # Benzersiz isim!
+            ),
         ]
         return custom_urls + urls
 
-    def redirect_to_upload_excel(self, request, model):
-        return redirect(reverse('customs_general:upload_excel', args=[model]))
+    def redirect_to_upload_excel(self, request):
+        model_name = self.model._meta.model_name
+        return redirect(reverse("customs_general:upload_excel", args=[model_name]))
 
 
 models = apps.get_app_config("customs_general").get_models()

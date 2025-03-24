@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from django.db import models
 
+
 def model_data(request, model):
     try:
         model_class = apps.get_model("customs_general", model)
@@ -138,4 +139,3 @@ def upload_excel(request, model):
     except Exception as e:
         print(f"Genel Hata: {e}")
         return JsonResponse({"success": False, "error": str(e)})
-

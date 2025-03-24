@@ -3,11 +3,20 @@ from django.db import models
 
 # Ülke Kodları
 class Country(models.Model):
-    country_code = models.CharField(max_length=100)
-    country_name = models.CharField(max_length=100)
+    country_code_tr = models.CharField(max_length=100)
+    country_code_en = models.CharField(max_length=100)
+    country_name_tr = models.CharField(max_length=100)
+    country_name_en = models.CharField(max_length=100)
+    country_number = models.CharField(max_length=100)
+    country_lang_code = models.CharField(max_length=100)
+    country_phone_code = models.CharField(max_length=100)
+    currency_code = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.country_code} - {self.country_name}"
+        return f"{self.country_code_tr} - {self.country_code_en} -" \
+               f" {self.country_number} - {self.country_name_en}" \
+               f"{self.country_name_tr} - {self.country_lang_code}" \
+               f"{self.country_phone_code} - {self.currency_code}"
 
     class Meta:
         verbose_name = "Ülke Kodları"
@@ -29,7 +38,7 @@ class City(models.Model):
 
 # STM Bağlı İl Kodları
 class Province(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -215,19 +224,6 @@ class Harbor(models.Model):
         verbose_name_plural = "Liman Kodları"
 
 
-# Ölçü Birimleri Kodları
-class MeasurementUnit(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.code} - {self.name}"
-
-    class Meta:
-        verbose_name = "Ölçü Birimleri Kodları"
-        verbose_name_plural = "Ölçü Birimleri Kodları"
-
-
 # Muafiyet Kodları
 class ExemptionCode(models.Model):
     code = models.CharField(max_length=255)
@@ -299,7 +295,7 @@ class TaxCode(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.code} - {self.description}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "Güncel Vergi Kodları"
@@ -424,7 +420,7 @@ class BankBranches(models.Model):
 
 
 class QuantityType(models.Model):
-    name = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=100)
     code = models.CharField(max_length=255)
     code_2 = models.CharField(max_length=255)
     edi_code = models.CharField(max_length=10)
