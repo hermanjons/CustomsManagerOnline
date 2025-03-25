@@ -2,19 +2,27 @@
 {% load custom_filters %}
 
 {% block title %}
-    {{ model_icon }} {{ model_display_name }} Verileri
+    Markalar Verileri
 {% endblock %}
 
 {% block content %}
-    <h2>{{ model_icon }} {{ model_display_name }}</h2>
+<div class="container">
+    <h2 class="mt-4">🏷️ Markalar</h2>
 
-    <!-- Arama Formu (Input, Ara ve Temizle butonları yan yana) -->
+    <!-- Yeni Marka Ekle Butonu -->
+    <div class="mb-3">
+        <a href="{% url 'brand_create' %}" class="btn btn-success">
+            <i class="material-icons">add</i> Yeni Marka Ekle
+        </a>
+    </div>
+
+    <!-- Arama Formu -->
     <form method="GET" action="" class="mb-3">
         <div class="input-group">
-            <input type="text" name="q" class="form-control" placeholder="Ara..." value="{{ query }}">
+            <input type="text" name="q" class="form-control" placeholder="Marka ara..." value="{{ query }}">
             <button type="submit" class="btn btn-primary">🔍 Ara</button>
             {% if query %}
-                <a href="{% url 'customs_general:model_data' model=model %}" class="btn btn-secondary">❌ Temizle</a>
+                <a href="{% url 'brand_page_view' %}" class="btn btn-secondary">❌ Temizle</a>
             {% endif %}
         </div>
     </form>
@@ -23,35 +31,37 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    {% for field in field_names %}
-                        <th>{{ field }}</th>
-                    {% endfor %}
+                    <th>Marka Adı</th>
+                    <th>Marka Kodu</th>
+                    <th>Aktivasyon No</th>
+                    <th>Açıklama</th>
+                    <th>Ülke</th>
+                    <th>Logo</th>
                 </tr>
             </thead>
             <tbody>
-                {% for object in page_obj %}
+                {% for brand in brands %}
                     <tr>
-                        {% for key in field_keys %}
-                            <td>
-                                {% if key == "brand_logo" %}
-                                    {% with logo=object|getattr_custom:key %}
-                                        {% if logo %}
-                                            <img src="{{ logo.url }}" alt="Logo" class="img-thumbnail clickable-image" style="max-width: 100px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageModal">
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    {% endwith %}
-                                {% else %}
-                                    {{ object|getattr_custom:key }}
-                                {% endif %}
-                            </td>
-                        {% endfor %}
+                        <td>{{ brand.brand_name }}</td>
+                        <td>{{ brand.brand_code }}</td>
+                        <td>{{ brand.brand_activate_number }}</td>
+                        <td>{{ brand.brand_description }}</td>
+                        <td>{{ brand.activated_countries }}</td>
+                        <td>
+                            {% if brand.brand_logo %}
+                                <img src="{{ brand.brand_logo.url }}" alt="{{ brand.brand_name }} Logo"
+                                     class="img-thumbnail clickable-image" style="max-width: 100px; cursor: pointer;"
+                                     data-bs-toggle="modal" data-bs-target="#imageModal">
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <!-- Sayfalama Butonları -->
+        <!-- Pagination ve Sayfa Başına Kayıt Ayarı -->
         <div class="d-flex justify-content-between align-items-center mt-3">
             <nav>
                 <ul class="pagination">
@@ -79,8 +89,8 @@
                 </ul>
             </nav>
 
-            <!-- Sayfa Başına Kaç Kayıt Gösterileceğini Seç -->
-            <form method="GET" action="" class="d-flex align-items-center" style="font-size: 14px; margin-left: auto;">
+            <!-- Kayıt Sayısı Seçimi -->
+            <form method="GET" action="" class="d-flex align-items-center" style="font-size: 14px;">
                 <label for="per_page" class="me-2">Sayfa başına:</label>
                 <select name="per_page" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
                     <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
@@ -94,27 +104,27 @@
     {% else %}
         <p class="text-center">Bu modelde eşleşen veri bulunmuyor.</p>
     {% endif %}
+</div>
 
-    <!-- Görsel Büyütme Modal'ı -->
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-          <div class="modal-body p-0 text-center">
-             <img src="" id="modalImage" class="img-fluid" alt="Büyütülmüş Görsel">
-          </div>
-        </div>
+<!-- Görseli Ortada Gösteren Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0 text-center">
+         <img src="" id="modalImage" class="img-fluid" alt="Büyütülmüş Logo">
       </div>
     </div>
+  </div>
+</div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var images = document.querySelectorAll('.clickable-image');
-            images.forEach(function(img) {
-                img.addEventListener('click', function() {
-                    var modalImage = document.getElementById('modalImage');
-                    modalImage.src = this.src;
-                });
-            });
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var images = document.querySelectorAll('.clickable-image');
+    images.forEach(function(img) {
+        img.addEventListener('click', function() {
+            document.getElementById('modalImage').src = this.src;
         });
-    </script>
+    });
+});
+</script>
 {% endblock %}

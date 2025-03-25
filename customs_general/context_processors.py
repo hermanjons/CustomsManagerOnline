@@ -1,19 +1,40 @@
 from django.apps import apps
-from .constants import MODEL_ICONS
+from .constants import MODEL_ICONS  # MODEL_ICONS sabitlerinizi tanımladığınız dosyadan import edin
 
 
 def model_list(request):
-    """Tüm modelleri UI dostu isimleri ve Twemoji ikonlarıyla birlikte template'e gönderir."""
-    models = apps.get_app_config("customs_general").get_models()
-    model_names = []
+    """
+    İki farklı uygulamadan modelleri çekip context'e ekler.
 
-    for model in models:
-        model_name = model._meta.model_name
-        icon = MODEL_ICONS.get(model_name, "❓")  # Eğer `MODEL_ICONS` içinde yoksa varsayılan ikon ata
-        model_names.append({
-            "model": model_name,
-            "display_name": model._meta.verbose_name,  # Kullanıcı dostu model ismi
-            "icon": icon,  # Twemoji bilgisi artık constants.py'den çekiliyor!
-        })
+    - "customs_general" uygulamasına bağlı modeller, genel tanımlamalar altında listelenecek.
+    - "product" uygulamasına bağlı modeller, ürün işlemleri altında listelenecek.
+    """
+    genel_tanimlamalar_models = []
+    urun_islemleri_models = []
 
-    return {"models": model_names}
+    for app_config in apps.get_app_configs():
+        # "customs_general" uygulamasına ait modelleri alıyoruz.
+        if app_config.label == 'customs_general':
+            for model in app_config.get_models():
+                model_name = model._meta.model_name
+                icon = MODEL_ICONS.get(model_name, "❓")
+                genel_tanimlamalar_models.append({
+                    "model": model_name,
+                    "display_name": model._meta.verbose_name,
+                    "icon": icon,
+                })
+        # "product" uygulamasına ait modelleri alıyoruz.
+        elif app_config.label == 'products':
+            for model in app_config.get_models():
+                model_name = model._meta.model_name
+                icon = MODEL_ICONS.get(model_name, "❓")
+                urun_islemleri_models.append({
+                    "model": model_name,
+                    "display_name": model._meta.verbose_name,
+                    "icon": icon,
+                })
+
+    return {
+        "genel_tanimlamalar_models": genel_tanimlamalar_models,
+        "urun_islemleri_models": urun_islemleri_models,
+    }

@@ -7,10 +7,10 @@
 
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             display: flex;
@@ -54,7 +54,7 @@
         .sidebar .material-icons {
             font-size: 22px;
             margin-right: 12px;
-            color: #f1c40f; /* Altın Sarısı */
+            color: #f1c40f;
         }
         .submenu {
             display: none;
@@ -81,32 +81,56 @@
     </style>
 </head>
 <body>
-
     <!-- Sidebar (Menü) -->
     <div class="sidebar">
-    <h4>📌 Ana Menü</h4>
-    <a href="{% url 'dashboard_home' %}">🏠 Ana Sayfa</a>
+        <h4>📌 Ana Menü</h4>
+        <a href="{% url 'dashboard_home' %}">🏠 Ana Sayfa</a>
 
-    <!-- Genel Tanımlamalar -->
-    <a href="#" id="toggleGeneralDefinitions">
-        📂 Genel Tanımlamalar ⬇
-    </a>
-    <div class="submenu" id="generalDefinitionsList">
-        {% for model in models %}
-            <a href="{% url 'customs_general:model_data' model=model.model %}">
-                {{ model.icon }} {{ model.display_name }}
-            </a>
-
-        {% empty %}
-            <a href="#">❌ Tanımlı model bulunamadı.</a>
+        <!-- Ürün İşlemleri Submenu -->
+<a href="#" id="toggleProductsLink">🛍️ Ürün İşlemleri</a>
+<div class="submenu" id="productsSubmenu">
+    {% if urun_islemleri_models %}
+        {% for item in urun_islemleri_models %}
+            {% if item.model == "brand" %}
+                <a href="{% url 'brand_page_view' %}">
+                    {{ item.icon }} {{ item.display_name }}
+                </a>
+            {% elif item.model == "productmodel" %}
+                <a href="{% url 'brand_page_view' %}">
+                    {{ item.icon }} {{ item.display_name }}
+                </a>
+            {% else %}
+                <a href="#">
+                    {{ item.icon }} {{ item.display_name }}
+                </a>
+            {% endif %}
         {% endfor %}
-    </div>
-
-    <a href="#">⚓ Limanlar</a>
-    <a href="#">💰 Vergi Kodları</a>
-    <a href="#">🏦 Banka Kodları</a>
+    {% else %}
+        <a href="#">❌ Tanımlı model bulunamadı.</a>
+    {% endif %}
 </div>
 
+
+        <!-- Genel Tanımlamalar Submenu -->
+        <a href="#" id="toggleGeneralDefinitionsLink">
+            📂 Genel Tanımlamalar ⬇
+        </a>
+        <div class="submenu" id="generalDefinitionsList">
+            {% if genel_tanimlamalar_models %}
+                {% for model in genel_tanimlamalar_models %}
+                    <a href="{% url 'customs_general:model_data' model=model.model %}">
+                        {{ model.icon }} {{ model.display_name }}
+                    </a>
+                {% endfor %}
+            {% else %}
+                <a href="#">❌ Tanımlı model bulunamadı.</a>
+            {% endif %}
+        </div>
+
+        <a href="#">⚓ Limanlar</a>
+        <a href="#">💰 Vergi Kodları</a>
+        <a href="#">🏦 Banka Kodları</a>
+    </div>
 
     <!-- İçerik Alanı -->
     <div class="content">
@@ -116,17 +140,22 @@
 
     <script>
         $(document).ready(function() {
-            $("#toggleGeneralDefinitions").click(function() {
+            // Ürün İşlemleri submenu'sunu toggle et
+            $("#toggleProductsLink").click(function(e) {
+                e.preventDefault();
+                $("#productsSubmenu").slideToggle();
+            });
+            // Genel Tanımlamalar submenu'sunu toggle et
+            $("#toggleGeneralDefinitionsLink").click(function(e) {
+                e.preventDefault();
                 $("#generalDefinitionsList").slideToggle();
             });
         });
     </script>
-
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        twemoji.parse(document.body); // Sayfadaki tüm emojileri Twemoji formatına dönüştür
-    });
+        document.addEventListener("DOMContentLoaded", function() {
+            twemoji.parse(document.body);
+        });
     </script>
-
 </body>
 </html>

@@ -12,6 +12,8 @@ class Country(models.Model):
     country_phone_code = models.CharField(max_length=100)
     currency_code = models.CharField(max_length=100)
 
+    custom_model = True
+
     def __str__(self):
         return f"{self.country_code_tr} - {self.country_code_en} -" \
                f" {self.country_number} - {self.country_name_en}" \
@@ -28,6 +30,8 @@ class City(models.Model):
     city_name = models.CharField(max_length=255)
     country_code = models.ForeignKey(Country, on_delete=models.CASCADE)
 
+    custom_model = True
+
     def __str__(self):
         return f"{self.city_code} - {self.city_name} - {self.country_code}"
 
@@ -40,6 +44,7 @@ class City(models.Model):
 class Province(models.Model):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -53,6 +58,7 @@ class Province(models.Model):
 class TransactionType(models.Model):
     code = models.CharField(max_length=10, unique=True)
     description = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.description}"
@@ -66,6 +72,7 @@ class TransactionType(models.Model):
 class Port(models.Model):
     code = models.CharField(max_length=30)
     name = models.CharField(max_length=100)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -80,6 +87,7 @@ class PaymentMethod(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=100)
     edi_code = models.CharField(max_length=100)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name} / {self.edi_code}"
@@ -92,6 +100,7 @@ class PaymentMethod(models.Model):
 class PaymentType(models.Model):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -106,6 +115,7 @@ class AdditionalInfoCode(models.Model):
     code = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
     value = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.description}: {self.value}"
@@ -119,6 +129,7 @@ class AdditionalInfoCode(models.Model):
 class AntiDumpingCompany(models.Model):
     code = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -132,6 +143,7 @@ class AntiDumpingCompany(models.Model):
 class CustomsType(models.Model):
     customs_type = models.CharField(max_length=50, unique=False)
     customs_type_code = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.customs_type} - {self.customs_type_code}"
@@ -145,6 +157,7 @@ class ChiefCustomsOffice(models.Model):
     chief_customs_code = models.CharField(max_length=50, unique=False)
     chief_customs_name = models.CharField(max_length=255)
     customs_number = models.CharField(max_length=50, unique=False)
+    custom_model = True
 
     def __str__(self):
         return f"{self.chief_customs_code} - {self.chief_customs_name} - {self.customs_number}"
@@ -163,6 +176,7 @@ class CustomsOffice(models.Model):
     customs_type = models.ForeignKey(CustomsType, on_delete=models.CASCADE)
     chief_customs_code = models.ForeignKey(ChiefCustomsOffice, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
+    custom_model = True
 
     def __str__(self):
         return f"{self.customs_code} - {self.customs_name} / {self.customs_number} - {self.customs_type}"
@@ -176,6 +190,7 @@ class CustomsOffice(models.Model):
 class TransportVehicle(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -189,6 +204,7 @@ class TransportVehicle(models.Model):
 class InternationalAgreement(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -202,6 +218,7 @@ class InternationalAgreement(models.Model):
 class SimplifiedProcedure(models.Model):
     code = models.CharField(max_length=100)
     description = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.description}"
@@ -215,6 +232,7 @@ class SimplifiedProcedure(models.Model):
 class Harbor(models.Model):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -228,6 +246,7 @@ class Harbor(models.Model):
 class ExemptionCode(models.Model):
     code = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.description}"
@@ -241,6 +260,7 @@ class ExemptionCode(models.Model):
 class RequiredDocument(models.Model):
     code = models.CharField(max_length=70)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -254,6 +274,7 @@ class RequiredDocument(models.Model):
 class Airport(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -267,6 +288,7 @@ class Airport(models.Model):
 class AirlineCompany(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -280,6 +302,7 @@ class AirlineCompany(models.Model):
 class DeliveryMethod(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -293,6 +316,7 @@ class DeliveryMethod(models.Model):
 class TaxCode(models.Model):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -308,6 +332,7 @@ class TransportType(models.Model):
     name = models.CharField(max_length=255)
     edi_code = models.CharField(max_length=100)
     e_invoice_code = models.CharField(max_length=100)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}/{self.edi_code} - {self.e_invoice_code}"
@@ -321,6 +346,7 @@ class TransportType(models.Model):
 class ContainerCode(models.Model):
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -334,6 +360,7 @@ class ContainerCode(models.Model):
 class CurrencyType(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=150)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -347,6 +374,7 @@ class CurrencyType(models.Model):
 class RegimeCode(models.Model):
     code = models.CharField(max_length=10, unique=True)
     description = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.code} - {self.description}"
@@ -360,6 +388,7 @@ class RegimeCode(models.Model):
 class Warehouse(models.Model):
     warehouse_code = models.CharField(max_length=10)
     warehouse_name = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.warehouse_code} - {self.warehouse_name}"
@@ -375,6 +404,7 @@ class Depot(models.Model):
     depot_name = models.CharField(max_length=255)
     customs_number = models.ForeignKey(CustomsOffice, on_delete=models.CASCADE)
     warehouse_code = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    custom_model = True
 
     def __str__(self):
         return f"{self.depot_code} - {self.depot_name} / {self.customs_number} - {self.warehouse_code}"
@@ -394,6 +424,7 @@ class Bank(models.Model):
     web_address = models.CharField(max_length=255)
     kep_address = models.CharField(max_length=100)
     eft_number = models.CharField(max_length=100)
+    custom_model = True
 
     def __str__(self):
         return f"{self.swift_code} - {self.bank_name} / {self.address} - {self.phone_number}" \
@@ -410,6 +441,7 @@ class BankBranches(models.Model):
     branches_number = models.CharField(max_length=50)
     branches_name = models.CharField(max_length=255)
     branch_acc_number = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.branches_number} - {self.branches_name} / {self.branch_acc_number} - {self.bank_connection}"
@@ -424,6 +456,7 @@ class QuantityType(models.Model):
     code = models.CharField(max_length=255)
     code_2 = models.CharField(max_length=255)
     edi_code = models.CharField(max_length=10)
+    custom_model = True
 
     def __str__(self):
         return f"{self.name} - {self.code} / {self.code_2} - {self.edi_code}"
@@ -436,6 +469,7 @@ class QuantityType(models.Model):
 class CustomerType(models.Model):
     name = models.CharField(max_length=10, unique=True)
     code = models.CharField(max_length=255)
+    custom_model = True
 
     def __str__(self):
         return f"{self.name} - {self.code}"

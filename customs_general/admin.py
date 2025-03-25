@@ -21,9 +21,7 @@ class CustomAdmin(admin.ModelAdmin):
         model_name = self.model._meta.model_name
         try:
             upload_excel_url = reverse(f'admin:admin_upload_excel_{model_name}')
-            print(f"Oluşturulan Excel URL'si: {upload_excel_url}")
         except Exception as e:
-            print(f"URL oluşturulurken hata oluştu: {e}")
             upload_excel_url = "#"  # Hata durumunda güvenli redirect
 
         # Excel ile Yükle butonunu oluşturuyoruz
@@ -36,14 +34,13 @@ class CustomAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
-        model_name = self.model._meta.model_name  # 👈 Hangi modeldeyiz
-        app_label = self.model._meta.app_label  # 👈 Hangi app'teyiz
+        model_name = self.model._meta.model_name  #Hangi modeldeyiz
 
         custom_urls = [
             path(
                 f'upload-excel/',
                 self.redirect_to_upload_excel,
-                name=f'admin_upload_excel_{model_name}'  # Benzersiz isim!
+                name=f'admin_upload_excel_{model_name}' #Benzersiz isim!
             ),
         ]
         return custom_urls + urls

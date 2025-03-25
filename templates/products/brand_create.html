@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}
+    Yeni Marka Ekle
+{% endblock %}
+
+{% block content %}
+<style>
+  /* Kart için hafif hover efekti */
+  .card {
+      border: none;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+  }
+  .card:hover {
+      /* Sadece gölge efekti ekliyoruz, form hareket etmiyor */
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  /* Form etiketleri */
+  .form-label {
+      font-weight: 500;
+  }
+  /* Buton hover efekti */
+  .btn-success {
+      transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .btn-success:hover {
+      background-color: #28a745;
+      transform: scale(1.03);
+  }
+  /* Form alanları odaklandığında */
+  input.form-control:focus,
+  select.form-control:focus,
+  textarea.form-control:focus {
+      border-color: #28a745;
+      box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h3 class="card-title mb-0">Yeni Marka Ekle</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="{{ form.brand_name.id_for_label }}" class="form-label">Marka Adı</label>
+                    {% render_field form.brand_name class="form-control" %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.brand_code.id_for_label }}" class="form-label">Marka Kodu</label>
+                    {% render_field form.brand_code class="form-control" %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.brand_activate_number.id_for_label }}" class="form-label">Aktivasyon Numarası</label>
+                    {% render_field form.brand_activate_number class="form-control" %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.brand_description.id_for_label }}" class="form-label">Açıklama</label>
+                    {% render_field form.brand_description class="form-control" %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.activated_countries.id_for_label }}" class="form-label">Ülke</label>
+                    {% render_field form.activated_countries class="form-control" %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.brand_logo.id_for_label }}" class="form-label">Marka Logosu</label>
+                    {% render_field form.brand_logo class="form-control" %}
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="material-icons" style="vertical-align: middle;">add</i> Marka Ekle
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

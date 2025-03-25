@@ -10,6 +10,5 @@ def getattr_custom(obj, attr_name):
 
 @register.filter(name="get_dict_value")
 def get_dict_value(dictionary, key):
-    print("sözlük:", dictionary, "sorgu:", key)
     """Sözlük içinden güvenli şekilde değer alır, eğer yoksa key'i döner."""
     return dictionary.get(key, key)
