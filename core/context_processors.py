@@ -1,5 +1,5 @@
 from django.apps import apps
-from .constants import MODEL_ICONS  # MODEL_ICONS sabitlerinizi tanımladığınız dosyadan import edin
+from customs_general.constants import MODEL_ICONS  # MODEL_ICONS sabitlerinizi tanımladığınız dosyadan import edin
 
 
 def model_list(request):

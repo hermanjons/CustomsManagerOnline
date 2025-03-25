@@ -4,6 +4,6 @@ from .views import brand_page_view,BrandCreateView
 app_label = "products"
 
 urlpatterns = [
-    path('operations/', brand_page_view, name='brand_page_view'),
+    path('brands/', brand_page_view, name='brand_page_view'),
     path('brand/create/', BrandCreateView.as_view(), name='brand_create'),
 ]

@@ -1,4 +1,3 @@
-
 MODEL_ICONS = {
     "province": "🗺️",  # STM Bağlı İl Kodları
     "transactiontype": "🔄",  # İşlem Niteliği Kodları
@@ -26,5 +25,13 @@ MODEL_ICONS = {
     "warehouse": "🏬",  # Ambar Kodları
     "depot": "🏠",  # Antrepo Kodları
     "bank": "🏦",  # Bankalar
+    "city": "🏙️",  # Şehir
+    "paymenttype": "💵",  # ödeme tipi
+    "customstype": "🛃",
+    "chiefcustomsoffice": "🏛️",
+    "quantitytype": "📏",
+    "customertype": "👥",
+    "bankbranches": "🏢",  # Banka Şubeleri
+    "brand": "🏷️",
+    "productmodel": "🗂️",
 }
-
