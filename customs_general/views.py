@@ -1,10 +1,8 @@
-from django.shortcuts import render, redirect
 from django.apps import apps
 import pandas as pd
-from django.http import HttpResponse, JsonResponse
-from django.contrib import messages, admin
+from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from .constants import MODEL_ICONS
+from core.constants import MODEL_ICONS
 from django.shortcuts import render
 from django.db.models import Q
 from django.core.paginator import Paginator
