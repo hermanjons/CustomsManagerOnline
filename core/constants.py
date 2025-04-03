@@ -34,4 +34,7 @@ MODEL_ICONS = {
     "bankbranches": "🏢",  # Banka Şubeleri
     "brand": "🏷️",
     "productmodel": "🗂️",
+    "uploadeddocuments": "📎",  # Yüklenen Belgeler
+    "products": "🛍️",           # Ürünler
+    "gtipcode": "📑",            # GTİP Kodları
 }

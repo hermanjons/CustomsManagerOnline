@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}
+    Yeni Ürün Ekle
+{% endblock %}
+
+{% block content %}
+<style>
+  .card-header {
+      background-color: #28a745 !important;
+      color: #fff !important;
+  }
+
+  .nav-tabs {
+      background-color: #f0f0f0;
+      border-radius: 0.25rem 0.25rem 0 0;
+      padding: 0.5rem;
+  }
+  .nav-tabs .nav-link {
+      color: #6c757d;
+      font-weight: bold;
+      border: none;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  .nav-tabs .nav-link:hover {
+      background-color: #e2e6ea;
+      transform: scale(1.05);
+  }
+  .nav-tabs .nav-link.active {
+      background-color: #28a745;
+      color: #fff;
+      border-bottom: 3px solid #28a745;
+      transform: none;
+  }
+
+  .tab-pane {
+      transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  }
+  .tab-pane.fade:not(.show) {
+      opacity: 0;
+      transform: translateY(10px);
+  }
+  .tab-pane.fade.show {
+      opacity: 1;
+      transform: translateY(0);
+  }
+</style>
+<style>
+input.is-invalid,
+select.is-invalid,
+textarea.is-invalid {
+  border-color: #dc3545 !important;
+}
+</style>
+
+
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <h3 class="card-title mb-0">Yeni Ürün Ekle</h3>
+    </div>
+    <div class="card-body">
+      <form id="productCreateForm" method="POST" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <ul class="nav nav-tabs" id="createProductTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
+              Genel Bilgiler
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing" type="button" role="tab" aria-controls="pricing" aria-selected="false">
+              Fiyat & Ölçüler
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="relations-tab" data-bs-toggle="tab" data-bs-target="#relations" type="button" role="tab" aria-controls="relations" aria-selected="false">
+              İlişkisel Bilgiler
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content mt-3" id="createProductTabsContent">
+          <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+            <div class="mb-3">
+              <label for="{{ form.prod_name.id_for_label }}" class="form-label">Ürün Adı</label>
+              {% render_field form.prod_name class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.prod_desc.id_for_label }}" class="form-label">Ürün Açıklaması</label>
+              {% render_field form.prod_desc class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.prod_code.id_for_label }}" class="form-label">Ürün Kodu</label>
+              {% render_field form.prod_code class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.manufacturer.id_for_label }}" class="form-label">Üretici</label>
+              {% render_field form.manufacturer class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.manufacturer_country.id_for_label }}" class="form-label">Üretici Ülkesi</label>
+              {% render_field form.manufacturer_country class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.manufacturer_stock_code.id_for_label }}" class="form-label">Üretici Stok Kodu</label>
+              {% render_field form.manufacturer_stock_code class="form-control" %}
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="pricing" role="tabpanel" aria-labelledby="pricing-tab">
+            <div class="mb-3">
+              <label for="{{ form.prod_price.id_for_label }}" class="form-label">Ürün Fiyatı</label>
+              {% render_field form.prod_price class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.currency_type.id_for_label }}" class="form-label">Döviz Cinsi</label>
+              {% render_field form.currency_type class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.quantity_type.id_for_label }}" class="form-label">Miktar Cinsi</label>
+              {% render_field form.quantity_type class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.kg.id_for_label }}" class="form-label">Ağırlık (kg)</label>
+              {% render_field form.kg class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.kg_net.id_for_label }}" class="form-label">Net Ağırlık (kg)</label>
+              {% render_field form.kg_net class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.package_lengths.id_for_label }}" class="form-label">Paket Boyutları</label>
+              {% render_field form.package_lengths class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.quantity_in_package.id_for_label }}" class="form-label">Paket İçindeki Miktar</label>
+              {% render_field form.quantity_in_package class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.package_barcode.id_for_label }}" class="form-label">Paket Barkodu</label>
+              {% render_field form.package_barcode class="form-control" %}
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="relations" role="tabpanel" aria-labelledby="relations-tab">
+            <div class="mb-3">
+              <label for="{{ form.brand.id_for_label }}" class="form-label">Marka</label>
+              {% render_field form.brand class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.prod_model.id_for_label }}" class="form-label">Ürün Modeli</label>
+              {% render_field form.prod_model class="form-control" %}
+            </div>
+           <!-- GTİP input görünür, ama disable + placeholder -->
+            <div class="mb-3">
+              <label class="form-label">GTİP Kodu</label>
+              <div class="input-group">
+                <input type="text" id="gtipDisplay" class="form-control" placeholder="GTİP kodunuzu arayın" disabled>
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#gtipCodeModal">
+                  GTİP ARA
+                </button>
+              </div>
+              <!-- Form ile gönderilecek hidden alan -->
+              <input type="hidden" name="gtip_code" id="hiddenGtipCode">
+            </div>
+
+
+
+            <div class="mb-3">
+              <label for="{{ form.container_code.id_for_label }}" class="form-label">Konteyner Kodu</label>
+              {% render_field form.container_code class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Vergi Kodları</label>
+              <div id="selectedTaxCodes" class="mb-2"></div>
+              <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#taxCodeModal">
+                Vergi Kodu Seç
+              </button>
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.doc_name.id_for_label }}" class="form-label">Belge Adı</label>
+              {% render_field form.doc_name class="form-control" %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.prod_img.id_for_label }}" class="form-label">Ürün Görseli</label>
+              {% render_field form.prod_img class="form-control" %}
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success mt-3">
+          <i class="material-icons" style="vertical-align: middle;">save</i>
+          Kaydet ve Devam Et
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="taxCodeModal" tabindex="-1" aria-labelledby="taxCodeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="taxCodeModalLabel">Vergi Kodu Ara</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="taxCodeSearch" class="form-control" placeholder="Vergi kodu ara...">
+            <ul id="taxCodeResults" class="list-group mt-2">
+              <!-- AJAX ile doldurulacak -->
+            </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="gtipCodeModal" tabindex="-1" aria-labelledby="gtipCodeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="gtipCodeModalLabel">GTİP Kodu Ara</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="gtipCodeSearch" class="form-control" placeholder="GTİP kodu ara...">
+        <ul id="gtipCodeResults" class="list-group mt-2">
+          <!-- AJAX ile doldurulacak -->
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".tax-code-item").forEach(function (item) {
+    item.addEventListener("click", function () {
+      var taxId = this.getAttribute("data-id");
+      var displayText = this.textContent.trim();
+
+      if (!document.getElementById("taxcode-" + taxId)) {
+        var badge = document.createElement("span");
+        badge.className = "badge bg-primary me-1 mb-1";
+        badge.id = "taxcode-" + taxId;
+        badge.style.cursor = "pointer";
+        badge.textContent = displayText;
+
+        badge.addEventListener("click", function () {
+          this.remove();
+          var hiddenInput = document.getElementById("hidden-taxcode-" + taxId);
+          if (hiddenInput) hiddenInput.remove();
+        });
+
+        var hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.name = "tax_codes[]";
+        hiddenInput.value = taxId;
+        hiddenInput.id = "hidden-taxcode-" + taxId;
+
+        document.getElementById("selectedTaxCodes").appendChild(badge);
+        document.getElementById("selectedTaxCodes").appendChild(hiddenInput);
+      }
+
+      var modalEl = document.getElementById("taxCodeModal");
+      var modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    });
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("taxCodeSearch");
+  const resultList = document.getElementById("taxCodeResults");
+
+  searchInput.addEventListener("keyup", function () {
+    const query = this.value.trim();
+
+    resultList.innerHTML = ''; // önce listeyi temizle
+
+    if (query.length < 2) return;
+
+    fetch(`/products/ajax/tax-code-search/?q=${query}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.results.length === 0) {
+          resultList.innerHTML = '<li class="list-group-item">Kod bulunamadı</li>';
+        } else {
+          data.results.forEach(item => {
+            const li = document.createElement("li");
+            li.className = "list-group-item tax-code-item";
+            li.dataset.id = item.id;
+            li.dataset.code = item.code;
+            li.textContent = `${item.code} - ${item.name}`;
+            resultList.appendChild(li);
+          });
+        }
+        bindClickEvents();
+      });
+  });
+
+  function bindClickEvents() {
+    document.querySelectorAll(".tax-code-item").forEach(function (item) {
+      item.addEventListener("click", function () {
+        const taxId = this.dataset.id;
+        const text = this.textContent;
+
+        if (!document.getElementById("taxcode-" + taxId)) {
+          const badge = document.createElement("span");
+          badge.className = "badge bg-primary me-1 mb-1";
+          badge.id = "taxcode-" + taxId;
+          badge.style.cursor = "pointer";
+          badge.textContent = text;
+
+          badge.addEventListener("click", function () {
+            this.remove();
+            const hiddenInput = document.getElementById("hidden-taxcode-" + taxId);
+            if (hiddenInput) hiddenInput.remove();
+          });
+
+          const hiddenInput = document.createElement("input");
+          hiddenInput.type = "hidden";
+          hiddenInput.name = "tax_codes[]";
+          hiddenInput.value = taxId;
+          hiddenInput.id = "hidden-taxcode-" + taxId;
+
+          const container = document.getElementById("selectedTaxCodes");
+          container.appendChild(badge);
+          container.appendChild(hiddenInput);
+        }
+
+        // modalı kapat
+        const modalEl = document.getElementById("taxCodeModal");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+      });
+    });
+  }
+
+  bindClickEvents(); // ilk yüklemede de bağla
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const gtipInput = document.getElementById("gtipCodeSearch");
+  const gtipResults = document.getElementById("gtipCodeResults");
+
+  gtipInput.addEventListener("keyup", function () {
+    const query = this.value.trim();
+    gtipResults.innerHTML = '';
+    if (query.length < 2) return;
+
+    fetch("/products/ajax/gtip-code-search/?q=" + query)
+      .then(res => res.json())
+      .then(data => {
+        if (data.results.length === 0) {
+          gtipResults.innerHTML = '<li class="list-group-item">Kod bulunamadı</li>';
+        } else {
+          data.results.forEach(item => {
+            const li = document.createElement("li");
+            li.className = "list-group-item gtip-code-item";
+            li.textContent = `${item.code} - ${item.name}`;
+            li.dataset.id = item.id;
+            li.dataset.code = item.code;
+            gtipResults.appendChild(li);
+          });
+
+          document.querySelectorAll(".gtip-code-item").forEach(function (el) {
+            el.addEventListener("click", function () {
+              const id = this.dataset.id;
+              const code = this.dataset.code;
+
+              // Görsel input'a yaz
+              document.getElementById("gtipDisplay").value = code;
+
+              // Forma gönderilecek alanı ayarla
+              document.getElementById("hiddenGtipCode").value = id;
+
+              // Modal kapat
+              const modalEl = document.getElementById("gtipCodeModal");
+              const modal = bootstrap.Modal.getInstance(modalEl);
+              if (modal) modal.hide();
+            });
+          });
+        }
+      });
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("productCreateForm");
+
+  form.addEventListener("submit", function (e) {
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    let foundIncomplete = false;
+
+    for (let tabPane of tabPanes) {
+      const requiredFields = tabPane.querySelectorAll("[required]");
+
+      for (let field of requiredFields) {
+        field.classList.remove("is-invalid");
+
+        if (!field.value.trim()) {
+          const tabId = tabPane.getAttribute("id");
+          const tabButton = document.querySelector(`button[data-bs-target="#${tabId}"]`);
+          if (tabButton) {
+            new bootstrap.Tab(tabButton).show();
+          }
+
+          field.classList.add("is-invalid");
+          field.focus();
+          field.reportValidity();
+
+          foundIncomplete = true;
+          break;
+        }
+      }
+
+      if (foundIncomplete) break;
+    }
+
+    if (foundIncomplete) {
+      e.preventDefault();
+    }
+  });
+
+  // ❗ Otomatik hata temizleme (kırmızı kenarlık kalksın)
+  const requiredFields = form.querySelectorAll("[required]");
+  requiredFields.forEach(field => {
+    field.addEventListener("input", function () {
+      if (field.value.trim() !== "") {
+        field.classList.remove("is-invalid");
+      }
+    });
+  });
+});
+</script>
+
+
+
+
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Model Bulunamadı{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-danger text-center">
+        <h2>Model Bulunamadı</h2>
+        <p>Aradığınız <strong>{{ model }}</strong> modeli bulunamadı.</p>
+        <p>Lütfen geçerli bir model adı girin veya menüden seçim yapın.</p>
+        <a href="{% url 'dashboard_home' %}" class="btn btn-primary mt-3">
+            <i class="material-icons" style="vertical-align: middle;">home</i> Ana Sayfaya Dön
+        </a>
+    </div>
+</div>
+{% endblock %}

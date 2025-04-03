@@ -16,9 +16,7 @@ class Country(models.Model):
 
     def __str__(self):
         return f"{self.country_code_tr} - {self.country_code_en} -" \
-               f" {self.country_number} - {self.country_name_en}" \
-               f"{self.country_name_tr} - {self.country_lang_code}" \
-               f"{self.country_phone_code} - {self.currency_code}"
+               f" {self.country_number} - {self.country_name_en}"
 
     class Meta:
         verbose_name = "Ülke Kodları"
@@ -316,6 +314,7 @@ class DeliveryMethod(models.Model):
 class TaxCode(models.Model):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
+    tax_ratio = models.CharField(max_length=15)
     custom_model = True
 
     def __str__(self):
@@ -477,3 +476,17 @@ class CustomerType(models.Model):
     class Meta:
         verbose_name = "Müşteri tipleri"
         verbose_name_plural = "Müşteri tipleri"
+
+
+class GtipCode(models.Model):
+    code = models.CharField(max_length=100)
+    desc = models.CharField(max_length=255)
+    quantity = models.CharField(max_length=50)
+    tax_code = models.ForeignKey(TaxCode, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f"{self.code} - {self.desc} - {self.quantity} - {self.tax_code}"
+
+    class Meta:
+        verbose_name = "GTİP Kodları"
+        verbose_name_plural = "GTİP Kodları"

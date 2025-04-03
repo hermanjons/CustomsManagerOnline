@@ -1,39 +1,13 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
-from .models import Brand, ProductModel
-from .forms import BrandForm
+from .models import Brand, ProductModel, Products, UploadedDocuments
+from customs_general.models import TaxCode, GtipCode
+from .forms import BrandForm, ProductModelForm, ProductsForm
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
-
-
-
-
-def brand_page_view(request):
-    # Arama ve sayfalama parametrelerini al
-    query = request.GET.get('q', '')
-    per_page = request.GET.get('per_page', '10')
-    try:
-        per_page = int(per_page)
-    except ValueError:
-        per_page = 10
-
-    # Markalar için sorgu: arama varsa filtrele, yoksa tüm markaları al
-    brands_queryset = Brand.objects.all()
-    if query:
-        brands_queryset = brands_queryset.filter(brand_name__icontains=query)
-
-    # Sayfalama işlemi: Paginator ile belirlenen sayıda marka göster
-    paginator = Paginator(brands_queryset, per_page)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'query': query,  # Arama terimi
-        'per_page': per_page,  # Sayfa başına gösterilecek kayıt sayısı
-        'page_obj': page_obj,  # Sayfalama nesnesi (markalar için)
-        'brands': page_obj.object_list,  # Sayfadaki marka kayıtları
-    }
-    return render(request, 'products/brand_page.html', context)
+from core.utils import GenericFilteredListView
+from django.http import JsonResponse
+from django.db.models import Q
 
 
 class BrandCreateView(CreateView):
@@ -43,30 +17,66 @@ class BrandCreateView(CreateView):
     success_url = reverse_lazy('brand_page_view')
 
 
+class ProductModelCreateView(CreateView):
+    model = ProductModel
+    form_class = ProductModelForm
+    template_name = 'products/model_create.html'
+    success_url = reverse_lazy('model_page_view')
 
-def model_page_view(request):
-    # Arama ve sayfalama parametrelerini al
+
+class BrandListView(GenericFilteredListView):
+    model = Brand
+    template_name = 'products/brand_page.html'
+    context_object_name = 'brands'
+
+
+class ProductModelListView(GenericFilteredListView):
+    model = ProductModel
+    template_name = 'products/model_page.html'
+    context_object_name = 'models'
+
+
+class ProductsListView(GenericFilteredListView):
+    model = Products
+    template_name = 'products/products_page.html'
+    context_object_name = 'products'
+
+
+
+
+class ProductsCreateView(CreateView):
+    model = Products
+    form_class = ProductsForm
+    template_name = 'products/products_create.html'
+    success_url = reverse_lazy('products_page_view')
+
+
+
+class UploadedDocsListView(GenericFilteredListView):
+    model = UploadedDocuments
+    template_name = 'products/uploaded_docs_page.html'
+    context_object_name = 'uploaded_documents'
+
+
+def tax_code_search(request):
     query = request.GET.get('q', '')
-    per_page = request.GET.get('per_page', '10')
-    try:
-        per_page = int(per_page)
-    except ValueError:
-        per_page = 10
-
-    # Markalar için sorgu: arama varsa filtrele, yoksa tüm markaları al
-    models_queryset = ProductModel.objects.all()
+    results = []
     if query:
-        models_queryset = models_queryset.filter(product_model__icontains=query)
+        matched = TaxCode.objects.filter(name__icontains=query)[:20]
+        print(matched)
+        results = [
+            {"id": t.id, "code": t.code, "name": t.name}
+            for t in matched
+        ]
+    return JsonResponse({"results": results})
 
-    # Sayfalama işlemi: Paginator ile belirlenen sayıda marka göster
-    paginator = Paginator(models_queryset, per_page)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
 
-    context = {
-        'query': query,  # Arama terimi
-        'per_page': per_page,  # Sayfa başına gösterilecek kayıt sayısı
-        'page_obj': page_obj,  # Sayfalama nesnesi (markalar için)
-        'models': page_obj.object_list,  # Sayfadaki model kayıtları
-    }
-    return render(request, 'products/model_page.html', context)
+def gtip_code_search(request):
+    query = request.GET.get('q', '')
+    results = []
+    if query:
+        matches = GtipCode.objects.filter(
+            Q(code__icontains=query) | Q(desc__icontains=query)
+        )[:20]
+        results = [{"id": g.id, "code": g.code, "name": g.desc} for g in matches]
+    return JsonResponse({"results": results})

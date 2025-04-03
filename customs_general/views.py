@@ -13,7 +13,7 @@ def model_data(request, model):
     try:
         model_class = apps.get_model("customs_general", model)
     except LookupError:
-        return render(request, "customs_general/model_not_found.html", {"model": model})
+        return render(request, "model_not_found.html", {"model": model})
 
     # Kullanıcı dostu model ismi ve ikon belirleme
     model_display_name = model_class._meta.verbose_name

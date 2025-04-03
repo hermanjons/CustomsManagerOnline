@@ -134,6 +134,16 @@
                         <a href="{% url 'model_page_view' %}">
                             {{ item.icon }} {{ item.display_name }}
                         </a>
+                    {% elif item.model == "products" %}
+                        <a href="{% url 'products_page_view' %}">
+                    {{ item.icon }}  {{ item.display_name }}
+                        </a>
+
+                    {% elif item.model == "uploadeddocuments"%}
+                        <a href= "{% url 'uploaded_docs_view' %}">
+
+                        {{ item.icon}}  {{ item.display_name }}
+                        </a>
                     {% else %}
                         <a href="#">
                             {{ item.icon }} {{ item.display_name }}
@@ -174,6 +184,16 @@
         {% endblock %}
     </div>
 
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0 text-center">
+         <img src="" id="modalImage" class="img-fluid" alt="Büyütülmüş Görsel">
+      </div>
+    </div>
+    </div>
+    </div>
+
     <script>
         $(document).ready(function() {
             // Ürün İşlemleri submenu'sunu toggle et
@@ -188,10 +208,32 @@
             });
         });
     </script>
+
+     <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var images = document.querySelectorAll('.clickable-image');
+        images.forEach(function(img) {
+            img.addEventListener('click', function() {
+                var modalImage = document.getElementById('modalImage');
+                modalImage.src = this.src;
+                // Bootstrap'ın modal API'siyle modalı gösteriyoruz:
+                var modal = new bootstrap.Modal(document.getElementById('imageModal'));
+                modal.show();
+            });
+        });
+    });
+    </script>
+
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             twemoji.parse(document.body);
         });
     </script>
+
+
+
+
+
 </body>
 </html>
