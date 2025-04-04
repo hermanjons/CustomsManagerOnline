@@ -175,15 +175,28 @@ textarea.is-invalid {
             </div>
             <div class="mb-3">
               <label class="form-label">Vergi Kodları</label>
-              <div id="selectedTaxCodes" class="mb-2"></div>
+              <div id="selectedTaxCodesContainer" class="border rounded p-2 mb-2 d-none">
+                <div id="selectedTaxCodes" class="d-flex flex-wrap gap-1"></div>
+                <small id="taxCodeCount" class="text-muted"></small>
+              </div>
               <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#taxCodeModal">
                 Vergi Kodu Seç
               </button>
             </div>
+
             <div class="mb-3">
-              <label for="{{ form.doc_name.id_for_label }}" class="form-label">Belge Adı</label>
-              {% render_field form.doc_name class="form-control" %}
+              <label class="form-label">Belgeler</label>
+              <div id="selectedDocumentsContainer" class="border rounded p-2 mb-2 d-none">
+                <div id="selectedDocuments" class="d-flex flex-wrap gap-1"></div>
+                <small id="documentCount" class="text-muted"></small>
+              </div>
+              <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#documentModal">
+                Belge Seç
+              </button>
             </div>
+
+
+
             <div class="mb-3">
               <label for="{{ form.prod_img.id_for_label }}" class="form-label">Ürün Görseli</label>
               {% render_field form.prod_img class="form-control" %}
@@ -235,6 +248,22 @@ textarea.is-invalid {
   </div>
 </div>
 
+<div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="documentModalLabel">Belge Ara</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="documentSearch" class="form-control" placeholder="Belge adı ara...">
+        <ul id="documentResults" class="list-group mt-2">
+          <!-- AJAX ile doldurulacak -->
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -271,80 +300,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (modal) modal.hide();
     });
   });
-});
-</script>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const searchInput = document.getElementById("taxCodeSearch");
-  const resultList = document.getElementById("taxCodeResults");
-
-  searchInput.addEventListener("keyup", function () {
-    const query = this.value.trim();
-
-    resultList.innerHTML = ''; // önce listeyi temizle
-
-    if (query.length < 2) return;
-
-    fetch(`/products/ajax/tax-code-search/?q=${query}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.results.length === 0) {
-          resultList.innerHTML = '<li class="list-group-item">Kod bulunamadı</li>';
-        } else {
-          data.results.forEach(item => {
-            const li = document.createElement("li");
-            li.className = "list-group-item tax-code-item";
-            li.dataset.id = item.id;
-            li.dataset.code = item.code;
-            li.textContent = `${item.code} - ${item.name}`;
-            resultList.appendChild(li);
-          });
-        }
-        bindClickEvents();
-      });
-  });
-
-  function bindClickEvents() {
-    document.querySelectorAll(".tax-code-item").forEach(function (item) {
-      item.addEventListener("click", function () {
-        const taxId = this.dataset.id;
-        const text = this.textContent;
-
-        if (!document.getElementById("taxcode-" + taxId)) {
-          const badge = document.createElement("span");
-          badge.className = "badge bg-primary me-1 mb-1";
-          badge.id = "taxcode-" + taxId;
-          badge.style.cursor = "pointer";
-          badge.textContent = text;
-
-          badge.addEventListener("click", function () {
-            this.remove();
-            const hiddenInput = document.getElementById("hidden-taxcode-" + taxId);
-            if (hiddenInput) hiddenInput.remove();
-          });
-
-          const hiddenInput = document.createElement("input");
-          hiddenInput.type = "hidden";
-          hiddenInput.name = "tax_codes[]";
-          hiddenInput.value = taxId;
-          hiddenInput.id = "hidden-taxcode-" + taxId;
-
-          const container = document.getElementById("selectedTaxCodes");
-          container.appendChild(badge);
-          container.appendChild(hiddenInput);
-        }
-
-        // modalı kapat
-        const modalEl = document.getElementById("taxCodeModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-      });
-    });
-  }
-
-  bindClickEvents(); // ilk yüklemede de bağla
 });
 </script>
 
@@ -448,7 +403,178 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // VERGİ KODLARI
+  const taxCodeSearch = document.getElementById("taxCodeSearch");
+  const taxCodeResults = document.getElementById("taxCodeResults");
+  const selectedTaxCodes = document.getElementById("selectedTaxCodes");
+  const selectedTaxCodesContainer = document.getElementById("selectedTaxCodesContainer");
+  const taxCodeCount = document.getElementById("taxCodeCount");
 
+  let taxDebounce;
+
+  taxCodeSearch.addEventListener("keyup", function () {
+    clearTimeout(taxDebounce);
+    taxDebounce = setTimeout(function () {
+      const query = taxCodeSearch.value.trim();
+      taxCodeResults.innerHTML = '';
+
+      if (query.length < 2) return;
+
+      fetch(`/products/ajax/tax-code-search/?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+          taxCodeResults.innerHTML = '';
+          if (data.results.length === 0) {
+            taxCodeResults.innerHTML = '<li class="list-group-item">Kod bulunamadı</li>';
+          } else {
+            data.results.forEach(item => {
+              const li = document.createElement("li");
+              li.className = "list-group-item tax-code-item";
+              li.dataset.id = item.id;
+              li.dataset.code = item.code;
+              li.textContent = `${item.code} - ${item.name}`;
+              taxCodeResults.appendChild(li);
+            });
+          }
+          bindTaxCodeClicks();
+        });
+    }, 300);
+  });
+
+  function bindTaxCodeClicks() {
+    document.querySelectorAll(".tax-code-item").forEach(item => {
+      item.addEventListener("click", function () {
+        const taxId = this.dataset.id;
+        const text = this.textContent;
+
+        if (!document.getElementById("taxcode-" + taxId)) {
+          const badge = document.createElement("span");
+          badge.className = "badge bg-primary me-1 mb-1";
+          badge.id = "taxcode-" + taxId;
+          badge.style.cursor = "pointer";
+          badge.textContent = text;
+
+          badge.addEventListener("click", function () {
+            this.remove();
+            document.getElementById("hidden-taxcode-" + taxId).remove();
+            updateTaxCodeUI();
+          });
+
+          const hiddenInput = document.createElement("input");
+          hiddenInput.type = "hidden";
+          hiddenInput.name = "tax_codes[]";
+          hiddenInput.value = taxId;
+          hiddenInput.id = "hidden-taxcode-" + taxId;
+
+          selectedTaxCodes.appendChild(badge);
+          selectedTaxCodes.appendChild(hiddenInput);
+          updateTaxCodeUI();
+        }
+
+        const modalEl = document.getElementById("taxCodeModal");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+      });
+    });
+  }
+
+  function updateTaxCodeUI() {
+    const count = selectedTaxCodes.querySelectorAll(".badge").length;
+    if (count === 0) {
+      selectedTaxCodesContainer.classList.add("d-none");
+    } else {
+      selectedTaxCodesContainer.classList.remove("d-none");
+    }
+    taxCodeCount.textContent = `${count} adet seçildi`;
+  }
+
+  // BELGELER
+  const documentSearch = document.getElementById("documentSearch");
+  const documentResults = document.getElementById("documentResults");
+  const selectedDocuments = document.getElementById("selectedDocuments");
+  const selectedDocumentsContainer = document.getElementById("selectedDocumentsContainer");
+  const documentCount = document.getElementById("documentCount");
+
+  let documentDebounce;
+
+  documentSearch.addEventListener("keyup", function () {
+    clearTimeout(documentDebounce);
+    documentDebounce = setTimeout(function () {
+      const query = documentSearch.value.trim();
+      documentResults.innerHTML = '';
+
+      if (query.length < 2) return;
+
+      fetch(`/products/ajax/document-search/?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+          documentResults.innerHTML = '';
+          if (data.results.length === 0) {
+            documentResults.innerHTML = '<li class="list-group-item">Belge bulunamadı</li>';
+          } else {
+            data.results.forEach(item => {
+              const li = document.createElement("li");
+              li.className = "list-group-item document-item";
+              li.dataset.id = item.id;
+              li.textContent = `${item.doc_name}`;
+              documentResults.appendChild(li);
+            });
+          }
+          bindDocumentClicks();
+        });
+    }, 300);
+  });
+
+  function bindDocumentClicks() {
+    document.querySelectorAll(".document-item").forEach(item => {
+      item.addEventListener("click", function () {
+        const docId = this.dataset.id;
+        const text = this.textContent;
+
+        if (!document.getElementById("document-" + docId)) {
+          const badge = document.createElement("span");
+          badge.className = "badge bg-info me-1 mb-1";
+          badge.id = "document-" + docId;
+          badge.style.cursor = "pointer";
+          badge.textContent = text;
+
+          badge.addEventListener("click", function () {
+            this.remove();
+            document.getElementById("hidden-document-" + docId).remove();
+            updateDocumentUI();
+          });
+
+          const hiddenInput = document.createElement("input");
+          hiddenInput.type = "hidden";
+          hiddenInput.name = "documents[]";
+          hiddenInput.value = docId;
+          hiddenInput.id = "hidden-document-" + docId;
+
+          selectedDocuments.appendChild(badge);
+          selectedDocuments.appendChild(hiddenInput);
+          updateDocumentUI();
+        }
+
+        const modalEl = document.getElementById("documentModal");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+      });
+    });
+  }
+
+  function updateDocumentUI() {
+    const count = selectedDocuments.querySelectorAll(".badge").length;
+    if (count === 0) {
+      selectedDocumentsContainer.classList.add("d-none");
+    } else {
+      selectedDocumentsContainer.classList.remove("d-none");
+    }
+    documentCount.textContent = `${count} adet seçildi`;
+  }
+});
+</script>
 
 
 {% endblock %}

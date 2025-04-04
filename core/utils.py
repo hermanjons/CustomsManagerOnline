@@ -3,6 +3,7 @@ from datetime import datetime
 from django.views.generic import ListView
 
 from django.db.models import Q, TextField, CharField
+from django.http import response, JsonResponse
 
 
 def date_based_upload_path(instance, filename):
@@ -49,3 +50,11 @@ class GenericFilteredListView(ListView):
             return int(per_page)
         except (ValueError, TypeError):
             return self.paginate_by_default
+
+
+class AjaxFilteredListView(GenericFilteredListView):
+    def render_to_response(self, context, **response_kwargs):
+        # queryset'teki verileri JSON'a çevir
+        data = list(context['object_list'].values())
+        print(data)
+        return JsonResponse({'results': data})

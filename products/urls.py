@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import BrandCreateView, ProductModelCreateView, BrandListView, ProductModelListView, ProductsListView,\
-    ProductsCreateView, tax_code_search, gtip_code_search,UploadedDocsListView
+    ProductsCreateView, tax_code_search, gtip_code_search, UploadedDocsListView, UploadedDocsModalSearch
+
+from .views import UploadedDocuments
 
 app_label = "products"
 
@@ -14,4 +16,7 @@ urlpatterns = [
     path('uploadeddocs/', UploadedDocsListView.as_view(), name='uploaded_docs_view'),
     path('ajax/tax-code-search/', tax_code_search, name='tax_code_search'),
     path('ajax/gtip-code-search/', gtip_code_search, name='gtip_code_search'),
+    path('ajax/document-search/',
+         UploadedDocsModalSearch.as_view(),
+         name='document_search')
 ]
