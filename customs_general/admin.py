@@ -4,27 +4,49 @@ from django.shortcuts import redirect
 from django.contrib import admin
 from django.apps import apps
 
-
 class CustomAdmin(admin.ModelAdmin):
-
     change_list_template = "admin/excel_upload.html"
 
+    def get_autocomplete_fields(self, request):
+        """ForeignKey ve ManyToMany alanları otomatik autocomplete yap."""
+        autocomplete = []
+        for field in self.model._meta.fields:
+            if field.get_internal_type() == 'ForeignKey':
+                autocomplete.append(field.name)
+        for m2m_field in self.model._meta.many_to_many:
+            autocomplete.append(m2m_field.name)
+        return autocomplete
+
+    def get_raw_id_fields(self, request):
+        """Gerekirse burada raw_id_fields ekleyebiliriz. Şu an boş."""
+        return []
+
+    def get_search_fields(self, request):
+        """Modeldeki tüm CharField ve TextField alanları search_fields olarak ayarla."""
+        search_fields = []
+        for field in self.model._meta.fields:
+            if field.get_internal_type() in ['CharField', 'TextField']:
+                search_fields.append(field.name)
+        return search_fields
+
+    def get_form(self, request, obj=None, **kwargs):
+        self.autocomplete_fields = self.get_autocomplete_fields(request)
+        self.raw_id_fields = self.get_raw_id_fields(request)
+        self.search_fields = self.get_search_fields(request)  # 🔥 search_fields otomatik atanıyor
+        return super().get_form(request, obj, **kwargs)
+
     def changelist_view(self, request, extra_context=None):
-        # Eğer extra_context yoksa oluşturuyoruz
         if extra_context is None:
             extra_context = {}
-        # Django admin’in varsayılan context’ini de alıyoruz
         default_context = self.admin_site.each_context(request)
-        # sözlükleri birleştirdik
         extra_context = {**default_context, **extra_context}
 
         model_name = self.model._meta.model_name
         try:
             upload_excel_url = reverse(f'admin:admin_upload_excel_{model_name}')
-        except Exception as e:
-            upload_excel_url = "#"  # Hata durumunda güvenli redirect
+        except Exception:
+            upload_excel_url = "#"
 
-        # Excel ile Yükle butonunu oluşturuyoruz
         extra_context['upload_excel_button'] = mark_safe(
             f'<a href="{upload_excel_url}" class="button" style="margin-bottom:10px; background:green; color:white; padding:10px; border-radius:5px;">📤 Excel ile Yükle</a>'
         )
@@ -34,13 +56,13 @@ class CustomAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
-        model_name = self.model._meta.model_name  #Hangi modeldeyiz
+        model_name = self.model._meta.model_name
 
         custom_urls = [
             path(
                 f'upload-excel/',
                 self.redirect_to_upload_excel,
-                name=f'admin_upload_excel_{model_name}' #Benzersiz isim!
+                name=f'admin_upload_excel_{model_name}'
             ),
         ]
         return custom_urls + urls
@@ -49,10 +71,8 @@ class CustomAdmin(admin.ModelAdmin):
         model_name = self.model._meta.model_name
         return redirect(reverse("customs_general:upload_excel", args=[model_name]))
 
-
+# MODELLERİ TOPLU KAYDEDİYORSAN AŞAĞIDAKİ DE VAR:
 models = apps.get_app_config("customs_general").get_models()
 
-# Her modeli `CustomAdmin` ile admin paneline kaydet
 for model in models:
-
     admin.site.register(model, CustomAdmin)

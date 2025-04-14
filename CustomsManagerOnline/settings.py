@@ -62,6 +62,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "core.context_processors.model_list",
                 "core.context_processors.site_logo_release",
+                "core.context_processors.model_field_verbose_names"
             ],
         },
     },

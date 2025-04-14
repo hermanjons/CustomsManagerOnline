@@ -1,6 +1,6 @@
 from django.db import models
-from customs_general.models import Country, RequiredDocument, CurrencyType, QuantityType, GtipCode, ContainerCode, \
-    TaxCode
+from customs_general.models import RequiredDocument, CurrencyType, QuantityType, GtipCode, ContainerCode, \
+    TaxCode, Country
 
 from core.utils import date_based_upload_path
 
@@ -68,7 +68,7 @@ class Products(models.Model):
     kg = models.CharField(max_length=30)
     kg_net = models.CharField(max_length=30)
     package_barcode = models.CharField(max_length=30)
-    doc_name = models.ForeignKey(UploadedDocuments, on_delete=models.CASCADE)
+    doc_name = models.ManyToManyField(UploadedDocuments, blank=True)
     tax_code = models.ManyToManyField(TaxCode, blank=True)
     prod_img = models.ImageField(upload_to="products/", blank=True, null=True, verbose_name="Ürün görseli")
 

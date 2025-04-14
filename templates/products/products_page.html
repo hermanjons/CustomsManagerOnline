@@ -17,6 +17,7 @@
 
 {% block table_header %}
     <tr>
+        <th>Ürün Görseli</th> <!-- 🔥 Yeni görsel sütunu -->
         <th>Ürün Adı</th>
         <th>Marka</th>
         <th>Fiyat</th>
@@ -28,6 +29,19 @@
 {% block table_rows %}
     {% for product in products %}
         <tr>
+            <td>
+                {% if product.prod_img %}
+                    <img src="{{ product.prod_img.url }}"
+                         alt="Ürün Görseli"
+                         class="img-thumbnail clickable-product-image"
+                         style="max-width: 90px; cursor: pointer;"
+                         data-bs-toggle="modal"
+                         data-bs-target="#imageModal"
+                         data-image="{{ product.prod_img.url }}">
+                {% else %}
+                    <span class="text-muted">Görsel Yok</span>
+                {% endif %}
+            </td>
             <td>{{ product.prod_name }}</td>
             <td>{{ product.brand }}</td>
             <td>{{ product.prod_price }}</td>
@@ -35,4 +49,19 @@
             <td>{{ product.prod_desc }}</td>
         </tr>
     {% endfor %}
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Modal kodu (gizli) -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-body p-0">
+        <img id="modalImage" src="" class="w-100" alt="Büyük Ürün Görseli">
+      </div>
+    </div>
+  </div>
+</div>
+
+
 {% endblock %}

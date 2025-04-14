@@ -1,12 +1,15 @@
 from django.apps import apps
 import pandas as pd
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from core.constants import MODEL_ICONS
 from django.shortcuts import render
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.db import models
+import io
+from django.core.files.base import ContentFile
+import math
 
 
 def model_data(request, model):
@@ -15,125 +18,213 @@ def model_data(request, model):
     except LookupError:
         return render(request, "model_not_found.html", {"model": model})
 
-    # Kullanıcı dostu model ismi ve ikon belirleme
     model_display_name = model_class._meta.verbose_name
     model_icon = MODEL_ICONS.get(model, "❓")
 
-    # Arama işlemi
-    query = request.GET.get("q", "").strip()  # Kullanıcıdan gelen arama terimi
-    objects = model_class.objects.all()  # Varsayılan olarak tüm kayıtları getiriyoruz
+    query = request.GET.get("q", "").strip()
+    objects = model_class.objects.all()
 
     if query:
         search_filters = Q()
         for field in model_class._meta.fields:
             if field.get_internal_type() in ["CharField", "TextField"]:
-                search_filters |= Q(**{f"{field.name}__icontains": query})  # Case-insensitive arama
+                search_filters |= Q(**{f"{field.name}__icontains": query})
 
         objects = objects.filter(search_filters)
 
-    # Kullanıcının belirlediği sayfa başına gösterilecek veri miktarını al
-    per_page = request.GET.get("per_page", 10)  # Varsayılan olarak 10 değer göster
+    per_page = request.GET.get("per_page", 10)
     try:
         per_page = int(per_page) if int(per_page) in [10, 25, 50, 100] else 10
     except ValueError:
-        per_page = 10  # Geçersiz giriş olursa varsayılan 10
+        per_page = 10
 
-    # Sayfalama işlemi
     paginator = Paginator(objects, per_page)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     # Modelin field bilgilerini al
-    field_names = [field.verbose_name for field in model_class._meta.fields]
-    field_keys = [field.name for field in model_class._meta.fields]
+    normal_fields = list(model_class._meta.fields)
+    m2m_fields = list(model_class._meta.many_to_many)
+    all_fields = normal_fields + m2m_fields
 
+    field_names = [field.verbose_name for field in all_fields]
+    field_keys = [field.name for field in all_fields]
+    print("M2M Fields:", m2m_fields)
     return render(request, "customs_general/model_data.html", {
         "model": model,
         "model_display_name": model_display_name,
         "model_icon": model_icon,
-        "page_obj": page_obj,  # Sayfalama nesnesini template'e gönder
+        "page_obj": page_obj,
         "field_names": field_names,
         "field_keys": field_keys,
-        "query": query,  # Arama kutusuna girilen değerin korunması için
-        "per_page": per_page,  # Sayfa başına gösterilecek öğe sayısı
+        "query": query,
+        "per_page": per_page,
+        "m2m_fields": m2m_fields,  # ⭐️⭐️⭐️ Yeni ekledik
     })
+
+
+def fetch_model_detail(request, model_name, pk):
+    try:
+        model_class = apps.get_model("customs_general", model_name)
+        obj = model_class.objects.get(pk=pk)
+        data = {}
+
+        for field in model_class._meta.fields:
+            value = getattr(obj, field.name, None)
+            if value is not None:
+                data[field.verbose_name] = str(value)
+            else:
+                data[field.verbose_name] = "-"
+
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @staff_member_required
 def upload_excel(request, model):
-    print(f"upload_excel fonksiyonu çağrıldı! Model: {model}")
-
     try:
         model_class = apps.get_model("customs_general", model)
-        print(f"{model} modeli bulundu!")
 
         if request.method == "POST":
-            print("POST isteği alındı!")
-
             if "excel_file" not in request.FILES:
-                print("Hata: Excel dosyası eksik!")
                 return JsonResponse({"success": False, "error": "Excel dosyası eksik!"})
 
             excel_file = request.FILES["excel_file"]
-            print(f"Yüklenen dosya: {excel_file.name}")
 
             try:
-                # ✅ Excel veya CSV dosyasını oku
                 if excel_file.name.endswith(".csv"):
                     df = pd.read_csv(excel_file)
-                    print("CSV dosyası okundu.")
                 elif excel_file.name.endswith(".xlsx"):
                     df = pd.read_excel(excel_file, engine="openpyxl")
-                    print("XLSX dosyası okundu.")
                 else:
-                    print("Hata: Geçersiz dosya formatı!")
                     return JsonResponse({"success": False, "error": "Sadece .csv ve .xlsx dosyaları kabul edilir."})
 
-                # ✅ Modelin tüm alanlarını al, ancak ForeignKey olanları ayrıca işaretle
+                # Tum dataframe icinde NaN olanlari None yapalim
+                df = df.where(pd.notnull(df), None)
+
                 field_names = [field.name for field in model_class._meta.fields if field.name != "id"]
                 foreign_keys = {
                     field.name: field.remote_field.model
                     for field in model_class._meta.fields
                     if isinstance(field, models.ForeignKey)
                 }
+                many_to_many_fields = [field.name for field in model_class._meta.many_to_many]
 
-                print(f"Model field'ları: {field_names}")
-                print(f"ForeignKey alanları: {foreign_keys}")
+                required_fields = [
+                    field.name for field in model_class._meta.fields
+                    if not field.null and not field.blank and not isinstance(field, models.AutoField)
+                ]
+                print("zorunlu alanlar:", required_fields)
 
-                # ✅ Excel dosyasındaki kolon isimlerini doğrula
-                for column in df.columns:
-                    if column not in field_names:
-                        print(f"Hata: Geçersiz sütun - {column}")
-                        return JsonResponse(
-                            {"success": False, "error": f"Geçersiz sütun: {column}. Beklenen sütunlar: {field_names}"}
-                        )
+                created_count = 0
+                failed_rows = []
+                total = len(df)
+                request.session['upload_progress'] = 0
 
-                # ✅ ForeignKey alanları için ID yerine instance atanmasını sağla
-                for fk_field, fk_model in foreign_keys.items():
-                    if fk_field in df.columns:
-                        print(f"ForeignKey dönüşümü başlatılıyor: {fk_field} -> {fk_model.__name__}")
-                        df[fk_field] = df[fk_field].apply(
-                            lambda x: fk_model.objects.get(id=int(x)) if pd.notna(x) else None
-                        )
+                for index, row in df.iterrows():
+                    try:
+                        missing_required = False
 
-                # ✅ Verileri veritabanına ekleme işlemi
-                new_objects = []
-                for _, row in df.iterrows():
-                    obj_data = {field: row[field] for field in field_names}
-                    new_objects.append(model_class(**obj_data))
+                        for field_name in required_fields:
+                            val = row.get(field_name)
+                            if val in [None, '', ' '] or (isinstance(val, float) and math.isnan(val)):
+                                missing_required = True
+                                print(f"Zorunlu alan eksik: {field_name}")
+                                break
 
-                model_class.objects.bulk_create(new_objects)
-                print(f"{len(new_objects)} kayıt başarıyla eklendi!")
+                        if missing_required:
+                            raise ValueError("Eksik zorunlu alan")
 
-                return JsonResponse({"success": True, "message": f"{len(new_objects)} kayıt başarıyla eklendi!"})
+                        obj_data = {}
+                        for field in field_names:
+                            if field not in many_to_many_fields:
+                                value = row.get(field)
+
+                                # NaN veya bos deger kontrolu
+                                if value in [None, '', ' '] or (isinstance(value, float) and math.isnan(value)):
+                                    value = None
+
+                                # ForeignKey alanlar icin lookup
+                                if field in foreign_keys and value is not None:
+                                    fk_model = foreign_keys[field]
+                                    value = fk_model.objects.get(id=int(value))
+
+                                obj_data[field] = value
+
+                        obj = model_class.objects.create(**obj_data)
+
+                        # ManyToMany alanlari ayarlayalim
+                        for m2m_field in many_to_many_fields:
+                            if m2m_field in df.columns:
+                                value = row.get(m2m_field)
+
+                                if value not in [None, '', ' '] and not (
+                                        isinstance(value, float) and math.isnan(value)):
+                                    ids = []
+                                    for val in str(value).split(','):
+                                        val = val.strip()
+                                        if val:
+                                            try:
+                                                ids.append(int(float(val)))
+                                            except ValueError:
+                                                pass
+                                    model_field = model_class._meta.get_field(m2m_field)
+                                    related_model = model_field.related_model
+                                    m2m_objs = related_model.objects.filter(id__in=ids)
+                                    getattr(obj, m2m_field).set(m2m_objs)
+                                else:
+                                    pass
+
+                        created_count += 1
+
+                    except Exception as e:
+                        failed_rows.append({
+                            'satir': index + 2,
+                            'hata': str(e)
+                        })
+
+                    progress = int(((index + 1) / total) * 100)
+                    request.session['upload_progress'] = progress
+
+                request.session['upload_progress'] = 100
+                request.session['failed_rows'] = failed_rows
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"{created_count} kayıt başarıyla eklendi!",
+                    "failed_rows_count": len(failed_rows),
+                    "failed_rows_download_url": f"/customs_general/download-failed-rows/{model}/"
+                })
 
             except Exception as e:
-                print(f"Hata oluştu: {str(e)}")
                 return JsonResponse({"success": False, "error": str(e)})
 
         else:
             return JsonResponse({"success": False, "error": "Sadece POST istekleri kabul edilir!"})
 
     except Exception as e:
-        print(f"Genel Hata: {e}")
         return JsonResponse({"success": False, "error": str(e)})
+
+
+def upload_progress(request):
+    progress = request.session.get('upload_progress', 0)
+    return JsonResponse({'progress': progress})
+
+
+@staff_member_required
+def download_failed_rows(request, model):
+    failed_rows = request.session.get('failed_rows')
+
+    if not failed_rows:
+        return HttpResponse("İndirilecek hata bulunamadı.", content_type="text/plain")
+
+    df = pd.DataFrame(failed_rows)
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=failed_rows.xlsx'
+
+    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)
+
+    return response

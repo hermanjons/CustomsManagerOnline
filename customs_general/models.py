@@ -1,22 +1,36 @@
 from django.db import models
 
 
+# Döviz Cinsi Kodları
+class CurrencyType(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=150)
+    custom_model = True
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+    class Meta:
+        verbose_name = "Döviz Cinsi Kodları"
+        verbose_name_plural = "Döviz Cinsi Kodları"
+
+
 # Ülke Kodları
 class Country(models.Model):
-    country_code_tr = models.CharField(max_length=100)
-    country_code_en = models.CharField(max_length=100)
+    country_code_alpha2 = models.CharField(max_length=100)
+    country_code_alpha3 = models.CharField(max_length=100)
     country_name_tr = models.CharField(max_length=100)
     country_name_en = models.CharField(max_length=100)
     country_number = models.CharField(max_length=100)
-    country_lang_code = models.CharField(max_length=100)
-    country_phone_code = models.CharField(max_length=100)
-    currency_code = models.CharField(max_length=100)
+    country_lang_code = models.CharField(max_length=100, null=True)
+    country_phone_code = models.CharField(max_length=100, null=True)
+    currency_id = models.ManyToManyField(CurrencyType, blank=True, null=True)
 
     custom_model = True
 
     def __str__(self):
-        return f"{self.country_code_tr} - {self.country_code_en} -" \
-               f" {self.country_number} - {self.country_name_en}"
+        return f"{self.country_code_alpha2} - {self.country_code_alpha3} -" \
+               f" {self.country_number} - {self.currency_id}"
 
     class Meta:
         verbose_name = "Ülke Kodları"
@@ -24,32 +38,18 @@ class Country(models.Model):
 
 
 class City(models.Model):
-    city_code = models.CharField(max_length=50)
-    city_name = models.CharField(max_length=255)
-    country_code = models.ForeignKey(Country, on_delete=models.CASCADE)
-
+    code = models.CharField(max_length=50, null=True)
+    name = models.CharField(max_length=255)
+    country_id = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
     custom_model = True
 
     def __str__(self):
-        return f"{self.city_code} - {self.city_name} - {self.country_code}"
+        return f"{self.code} - {self.name} - {self.country_id}"
 
     class Meta:
         verbose_name = "Şehirler"
         verbose_name_plural = "Şehirler"
-
-
-# STM Bağlı İl Kodları
-class Province(models.Model):
-    code = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    custom_model = True
-
-    def __str__(self):
-        return f"{self.code} - {self.name}"
-
-    class Meta:
-        verbose_name = "STM bağlı il kodları"
-        verbose_name_plural = "STM bağlı il kodları"
 
 
 # İşlem Niteliği Kodları
@@ -68,8 +68,10 @@ class TransactionType(models.Model):
 
 # Uluslararası Liman Kodları
 class Port(models.Model):
-    code = models.CharField(max_length=30)
-    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=60, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    country_id = models.ForeignKey(Country, on_delete=models.CASCADE, null=True)
+    city_id = models.ForeignKey(City,on_delete=models.CASCADE, null=True)
     custom_model = True
 
     def __str__(self):
@@ -84,6 +86,9 @@ class Port(models.Model):
 class PaymentMethod(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    risk_status = models.CharField(max_length=100)
+    usage_status = models.CharField(max_length=100)
     edi_code = models.CharField(max_length=100)
     custom_model = True
 
@@ -98,6 +103,9 @@ class PaymentMethod(models.Model):
 class PaymentType(models.Model):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
+    description = models.CharField(max_length=150)
+    risk_status = models.CharField(max_length=100)
+    usage_status = models.CharField(max_length=100)
     custom_model = True
 
     def __str__(self):
@@ -139,12 +147,13 @@ class AntiDumpingCompany(models.Model):
 
 # gümrük tipleri
 class CustomsType(models.Model):
-    customs_type = models.CharField(max_length=50, unique=False)
-    customs_type_code = models.CharField(max_length=255)
+    code = models.CharField(max_length=50, unique=False)
+    name = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
     custom_model = True
 
     def __str__(self):
-        return f"{self.customs_type} - {self.customs_type_code}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "Gümrük tipleri"
@@ -152,13 +161,12 @@ class CustomsType(models.Model):
 
 
 class ChiefCustomsOffice(models.Model):
-    chief_customs_code = models.CharField(max_length=50, unique=False)
-    chief_customs_name = models.CharField(max_length=255)
-    customs_number = models.CharField(max_length=50, unique=False)
+    code = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255, unique=True)
     custom_model = True
 
     def __str__(self):
-        return f"{self.chief_customs_code} - {self.chief_customs_name} - {self.customs_number}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "Başgümrük Müdürlükleri"
@@ -168,16 +176,15 @@ class ChiefCustomsOffice(models.Model):
 # Gümrük İdareleri
 
 class CustomsOffice(models.Model):
-    customs_code = models.CharField(max_length=50, unique=False)
-    customs_name = models.CharField(max_length=255)
-    customs_number = models.CharField(max_length=50, unique=False)
-    customs_type = models.ForeignKey(CustomsType, on_delete=models.CASCADE)
-    chief_customs_code = models.ForeignKey(ChiefCustomsOffice, on_delete=models.CASCADE)
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, unique=False)
+    code = models.CharField(max_length=255)
+    customs_type_id = models.ManyToManyField(CustomsType, null=True, blank=True)
+    chief_customs_id = models.ForeignKey(ChiefCustomsOffice, on_delete=models.CASCADE, null=True, blank=True)
+    city_id = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     custom_model = True
 
     def __str__(self):
-        return f"{self.customs_code} - {self.customs_name} / {self.customs_number} - {self.customs_type}"
+        return f"{self.name} - {self.code}"
 
     class Meta:
         verbose_name = "Gümrük İdareleri ve Saymanlık Kodları"
@@ -258,6 +265,8 @@ class ExemptionCode(models.Model):
 class RequiredDocument(models.Model):
     code = models.CharField(max_length=70)
     name = models.CharField(max_length=255)
+    edi_code = models.CharField(max_length=150)
+    name_en = models.CharField(max_length=150)
     custom_model = True
 
     def __str__(self):
@@ -270,12 +279,18 @@ class RequiredDocument(models.Model):
 
 # Havalimanı Kodları
 class Airport(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
+    code_iata = models.CharField(max_length=10, unique=True, blank=True, null=True)
+    code_icao = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    city_id = models.ForeignKey(City, on_delete=models.CASCADE, blank=True, null=True)
+    country_id = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+    name = models.CharField(max_length=100)
+    latitude_degree = models.CharField(max_length=80, blank=True, null=True)
+    longitude_degree = models.CharField(max_length=100, blank=True, null=True)
+
     custom_model = True
 
     def __str__(self):
-        return f"{self.code} - {self.name}"
+        return f"{self.code_iata} - {self.code_icao} - {self.city_id}"
 
     class Meta:
         verbose_name = "Havalimanı Kodları"
@@ -298,8 +313,9 @@ class AirlineCompany(models.Model):
 
 # Teslim Şekli Kodları
 class DeliveryMethod(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=200)
     custom_model = True
 
     def __str__(self):
@@ -314,7 +330,7 @@ class DeliveryMethod(models.Model):
 class TaxCode(models.Model):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    tax_ratio = models.CharField(max_length=15)
+    tax_ratio = models.IntegerField(null=True)
     custom_model = True
 
     def __str__(self):
@@ -328,13 +344,15 @@ class TaxCode(models.Model):
 # Taşıma Türleri Kodları
 class TransportType(models.Model):
     code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-    edi_code = models.CharField(max_length=100)
-    e_invoice_code = models.CharField(max_length=100)
+    name_tr = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255, null=True)
+
+    edi_code = models.IntegerField(null=True)
+    e_invoice_code = models.IntegerField(null=True)
     custom_model = True
 
     def __str__(self):
-        return f"{self.code} - {self.name}/{self.edi_code} - {self.e_invoice_code}"
+        return f"{self.code} - {self.name_tr}/{self.edi_code} - {self.e_invoice_code}"
 
     class Meta:
         verbose_name = "Taşıma Türleri Kodları"
@@ -353,20 +371,6 @@ class ContainerCode(models.Model):
     class Meta:
         verbose_name = "Kap Kodları"
         verbose_name_plural = "Kap Kodları"
-
-
-# Döviz Cinsi Kodları
-class CurrencyType(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=150)
-    custom_model = True
-
-    def __str__(self):
-        return f"{self.code} - {self.name}"
-
-    class Meta:
-        verbose_name = "Döviz Cinsi Kodları"
-        verbose_name_plural = "Döviz Cinsi Kodları"
 
 
 # Rejim Kodları
@@ -415,19 +419,15 @@ class Depot(models.Model):
 
 # Banka Kodları
 class Bank(models.Model):
-    swift_code = models.CharField(max_length=50)
+    swift_code = models.CharField(max_length=50, null=True)
     bank_name = models.CharField(max_length=255)
-    address = models.CharField(max_length=255)
-    phone_number = models.CharField(max_length=40)
-    fax_number = models.CharField(max_length=100)
-    web_address = models.CharField(max_length=255)
-    kep_address = models.CharField(max_length=100)
-    eft_number = models.CharField(max_length=100)
+    address = models.CharField(max_length=255, null=True)
+    eft_number = models.IntegerField(null=True)
+    bank_logo = models.ImageField(upload_to="customs_general/", blank=True, null=True, verbose_name="Ürün görseli")
     custom_model = True
 
     def __str__(self):
-        return f"{self.swift_code} - {self.bank_name} / {self.address} - {self.phone_number}" \
-               f"{self.fax_number} - {self.web_address} / {self.kep_address} - {self.eft_number}"
+        return f"{self.swift_code} - {self.bank_name} / {self.address}"
 
     class Meta:
         verbose_name = "Banka Kodları"
@@ -436,14 +436,14 @@ class Bank(models.Model):
 
 # Bank sınıfıyla ilişkili sınıf
 class BankBranches(models.Model):
-    bank_connection = models.ForeignKey(Bank, on_delete=models.CASCADE, max_length=100)
-    branches_number = models.CharField(max_length=50)
-    branches_name = models.CharField(max_length=255)
-    branch_acc_number = models.CharField(max_length=255)
+    bank_id = models.ForeignKey(Bank, on_delete=models.CASCADE, max_length=100)
+    branches_code = models.CharField(max_length=50)
+    name = models.CharField(max_length=255)
+    city_id = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
     custom_model = True
 
     def __str__(self):
-        return f"{self.branches_number} - {self.branches_name} / {self.branch_acc_number} - {self.bank_connection}"
+        return f"{self.branches_code} - {self.name}"
 
     class Meta:
         verbose_name = "Banka şubeleri"
@@ -453,12 +453,12 @@ class BankBranches(models.Model):
 class QuantityType(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=255)
-    code_2 = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255)
     edi_code = models.CharField(max_length=10)
     custom_model = True
 
     def __str__(self):
-        return f"{self.name} - {self.code} / {self.code_2} - {self.edi_code}"
+        return f"{self.name} - {self.code} / {self.name_en} - {self.edi_code}"
 
     class Meta:
         verbose_name = "Miktar Cinsleri"
@@ -466,7 +466,7 @@ class QuantityType(models.Model):
 
 
 class CustomerType(models.Model):
-    name = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=50, unique=True)
     code = models.CharField(max_length=255)
     custom_model = True
 

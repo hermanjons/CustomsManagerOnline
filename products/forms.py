@@ -1,5 +1,5 @@
 from django import forms
-from .models import Brand, ProductModel, Products
+from .models import Brand, ProductModel, Products, UploadedDocuments
 
 
 class BrandForm(forms.ModelForm):
@@ -13,7 +13,6 @@ class ProductModelForm(forms.ModelForm):
     class Meta:
         model = ProductModel
         fields = ['product_model', 'brand']
-
 
 
 class ProductsForm(forms.ModelForm):
@@ -44,4 +43,7 @@ class ProductsForm(forms.ModelForm):
         ]
 
 
-
+class UploadedDocsForm(forms.ModelForm):
+    class Meta:
+        model = UploadedDocuments
+        fields = ["doc_type", "doc_name", "doc_file"]

@@ -1,93 +1,42 @@
-{% extends "base.html" %}
+{% extends "generic_list.html" %}
 
-{% block title %}Yüklenen Belgeler{% endblock %}
+{% block header_title %}
+    Yüklenen Dökümanlar
+{% endblock %}
 
-{% block content %}
+{% block add_button %}
+    <a href="{% url 'uploaded_docs_create' %}" class="btn btn-success">
+        <i class="material-icons" style="vertical-align: middle;">upload_file</i>
+        Döküman Ekle
+    </a>
+{% endblock %}
 
-<div class="container mt-4">
-  <div class="card shadow-sm">
-    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">📂 Yüklenen Belgeler</h5>
-    </div>
-    <div class="card-body">
+{% block search_placeholder %}
+    Döküman ara...
+{% endblock %}
 
-      <!-- Arama Formu -->
-      <form method="get" class="row g-3 mb-3">
-        <div class="col-md-10">
-          <input type="text" name="q" class="form-control" placeholder="Belge adıyla ara..." value="{{ request.GET.q }}">
-        </div>
+{% block table_header %}
+    <tr>
+        <th>Belge Adı</th>
+        <th>Belge Türü</th>
+        <th>Dosya</th>
+    </tr>
+{% endblock %}
 
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-outline-success w-100">Ara</button>
-        </div>
-      </form>
-
-      {% if uploaded_documents %}
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>#</th>
-                <th>Belge Adı</th>
-                <th>Dosya</th>
-                <th>Belge Türü</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for doc in uploaded_documents %}
-                <tr>
-                  <td>{{ forloop.counter }}</td>
-                  <td>{{ doc.doc_name }}</td>
-                  <td>
-                    {% if doc.doc_file %}
-
-                      <a href="{{ doc.doc_file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+{% block table_rows %}
+    {% for doc in uploaded_documents %}
+        <tr>
+            <td>{{ doc.doc_name }}</td>
+            <td>{{ doc.doc_type }}</td>
+            <td>
+                {% if doc.doc_file %}
+                    <a href="{{ doc.doc_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
                         Görüntüle
-                      </a>
-                    {% else %}
-                      <span class="text-muted">Dosya Yok</span>
-                    {% endif %}
-                  </td>
-                  <td>{{ doc.doc_type}}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Sayfalama -->
-        {% if is_paginated %}
-          <nav class="mt-3">
-            <ul class="pagination justify-content-center">
-              {% if page_obj.has_previous %}
-                <li class="page-item">
-                  <a class="page-link" href="?q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                    &laquo;
-                  </a>
-                </li>
-              {% endif %}
-
-              {% for i in paginator.page_range %}
-                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
-                  <a class="page-link" href="?q={{ request.GET.q }}&page={{ i }}">{{ i }}</a>
-                </li>
-              {% endfor %}
-
-              {% if page_obj.has_next %}
-                <li class="page-item">
-                  <a class="page-link" href="?q={{ request.GET.q }}&page={{ page_obj.next_page_number }}" aria-label="Next">
-                    &raquo;
-                  </a>
-                </li>
-              {% endif %}
-            </ul>
-          </nav>
-        {% endif %}
-
-      {% else %}
-        <p class="text-muted">Herhangi bir belge bulunamadı.</p>
-      {% endif %}
-    </div>
-  </div>
-</div>
+                    </a>
+                {% else %}
+                    <span class="text-muted">Dosya Yok</span>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
 {% endblock %}
