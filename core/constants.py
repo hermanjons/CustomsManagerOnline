@@ -52,8 +52,11 @@ MODEL_FIELD_VERBOSE_NAMES = {
         'currency_id': 'Para Birimleri',
     },
     'currencytype': {
-        'code': 'Para Birimi Kodu',
-        'name': 'Para Birimi Adı',
+        'currency_code_3_alpha': 'Para Birimi Kodu',
+        'name': 'Para Birimi Adı(EN)',
+        'code' : 'Para Birimi Numarası',
+        'minor_unit' : 'Alt Birim',
+        'name_tr' : 'Para Birimi Adı'
     },
     'city': {
         'code': 'Kodu',
@@ -185,7 +188,7 @@ MODEL_FIELD_VERBOSE_NAMES = {
 FK_M2M_REPRESENTATIVE_FIELDS = {
     "Country": "country_name_tr",
     "City": "name",
-    "CurrencyType": "name",
+    "CurrencyType": "name_tr",
     "ChiefCustomsOffice": "code",
     "CustomsType": "code",
     "Bank": 'bank_name'
