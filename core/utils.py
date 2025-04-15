@@ -4,6 +4,7 @@ from django.views.generic import ListView
 
 from django.db.models import Q, TextField, CharField, ForeignKey, ManyToManyField
 from django.http import response, JsonResponse
+from core.constants import MODEL_ICONS, MODEL_FIELD_VERBOSE_NAMES
 
 
 def date_based_upload_path(instance, filename):
@@ -17,16 +18,18 @@ def date_based_upload_path(instance, filename):
 
 
 class GenericFilteredListView(ListView):
+    model = None
     query_param = 'q'
     search_fields = None
     related_search_fields = None
     paginate_by_default = 10
 
+    # NOT: visible_fields ve excluded_fields burada tanımlanmıyor
+    # Çünkü her alt sınıf kendisi belirleyecek
+
     def get_search_fields(self):
         if self.search_fields is not None:
             return self.search_fields
-
-        # search_fields verilmemişse tüm non-relation CharField ve TextField alanları otomatik al
         return [
             field.name
             for field in self.model._meta.get_fields()
@@ -34,11 +37,7 @@ class GenericFilteredListView(ListView):
         ]
 
     def get_related_search_fields(self):
-        if self.related_search_fields is not None:
-            return self.related_search_fields
-
-        # related_search_fields verilmemişse hiç relation alanı aranmayacak
-        return []
+        return self.related_search_fields or []
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -46,15 +45,10 @@ class GenericFilteredListView(ListView):
 
         if query:
             q_obj = Q()
-
-            # Normal alanlar için arama
             for field in self.get_search_fields():
                 q_obj |= Q(**{f"{field}__icontains": query})
-
-            # Related alanlar için arama
             for related_field in self.get_related_search_fields():
                 q_obj |= Q(**{f"{related_field}__icontains": query})
-
             qs = qs.filter(q_obj)
 
         return qs
@@ -66,6 +60,39 @@ class GenericFilteredListView(ListView):
         except (ValueError, TypeError):
             return self.paginate_by_default
 
+    def get_visible_fields(self):
+        # Öncelikli: visible_fields tanımlıysa sadece onları göster
+        if hasattr(self, 'visible_fields') and self.visible_fields is not None:
+            return [
+                field for field in self.model._meta.fields
+                if field.name in self.visible_fields
+            ]
+        # Aksi halde excluded_fields varsa onu dikkate al
+        excluded = getattr(self, 'excluded_fields', [])
+        return [
+            field for field in self.model._meta.fields
+            if field.name not in excluded
+        ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        model_name = self.model.__name__.lower()
+        visible_fields = self.get_visible_fields()
+        m2m_fields = list(self.model._meta.many_to_many)
+
+        context.update({
+            "model": model_name,
+            "model_display_name": self.model._meta.verbose_name,
+            "model_icon": MODEL_ICONS.get(model_name, "❓"),
+            "field_keys": [field.name for field in visible_fields + m2m_fields],
+            "field_names": [field.verbose_name for field in visible_fields + m2m_fields],
+            "m2m_fields": m2m_fields,
+            "field_verbose_map": MODEL_FIELD_VERBOSE_NAMES.get(model_name, {}),
+            "query": self.request.GET.get(self.query_param, ""),
+            "per_page": self.get_paginate_by(self.get_queryset()),
+        })
+        return context
 
 class AjaxFilteredListView(GenericFilteredListView):
     def render_to_response(self, context, **response_kwargs):

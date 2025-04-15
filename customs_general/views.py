@@ -10,57 +10,26 @@ from django.db import models
 import io
 from django.core.files.base import ContentFile
 import math
+from core.utils import GenericFilteredListView
 
 
-def model_data(request, model):
-    try:
-        model_class = apps.get_model("customs_general", model)
-    except LookupError:
-        return render(request, "model_not_found.html", {"model": model})
+class GeneralCustomsModelListView(GenericFilteredListView):
+    """
+    customs_general uygulamasındaki tanım modellerini listelemek için
+    dinamik olarak çalışan generic view sınıfı.
+    """
+    app_label = "customs_general"
+    model_param = "model"
+    template_name = "customs_general/customs_general_page.html"
+    excluded_fields = ["created_at","updated_at","id","is_active"]
 
-    model_display_name = model_class._meta.verbose_name
-    model_icon = MODEL_ICONS.get(model, "❓")
-
-    query = request.GET.get("q", "").strip()
-    objects = model_class.objects.all()
-
-    if query:
-        search_filters = Q()
-        for field in model_class._meta.fields:
-            if field.get_internal_type() in ["CharField", "TextField"]:
-                search_filters |= Q(**{f"{field.name}__icontains": query})
-
-        objects = objects.filter(search_filters)
-
-    per_page = request.GET.get("per_page", 10)
-    try:
-        per_page = int(per_page) if int(per_page) in [10, 25, 50, 100] else 10
-    except ValueError:
-        per_page = 10
-
-    paginator = Paginator(objects, per_page)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    # Modelin field bilgilerini al
-    normal_fields = list(model_class._meta.fields)
-    m2m_fields = list(model_class._meta.many_to_many)
-    all_fields = normal_fields + m2m_fields
-
-    field_names = [field.verbose_name for field in all_fields]
-    field_keys = [field.name for field in all_fields]
-    print("M2M Fields:", m2m_fields)
-    return render(request, "customs_general/model_data.html", {
-        "model": model,
-        "model_display_name": model_display_name,
-        "model_icon": model_icon,
-        "page_obj": page_obj,
-        "field_names": field_names,
-        "field_keys": field_keys,
-        "query": query,
-        "per_page": per_page,
-        "m2m_fields": m2m_fields,  # ⭐️⭐️⭐️ Yeni ekledik
-    })
+    def dispatch(self, request, *args, **kwargs):
+        model_name = kwargs.get(self.model_param) or request.GET.get(self.model_param)
+        try:
+            self.model = apps.get_model(self.app_label, model_name)
+        except LookupError:
+            return render(request, "model_not_found.html", {"model": model_name})
+        return super().dispatch(request, *args, **kwargs)
 
 
 def fetch_model_detail(request, model_name, pk):
