@@ -21,3 +21,26 @@ class AuditModel(TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         abstract = True
+
+
+class AuditModelWithId(AuditModel):
+    id = models.IntegerField(primary_key=True, unique=True)
+
+    class Meta:
+        abstract = True
+
+
+class AuditModelWithSource(AuditModel):
+    data_source = models.ForeignKey(
+        "customs_general.DataSource", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    class Meta:
+        abstract = True
+
+
+class AuditModelWithIdAndSource(AuditModelWithSource):
+    id = models.IntegerField(primary_key=True, unique=True)
+
+    class Meta:
+        abstract = True

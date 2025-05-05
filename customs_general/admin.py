@@ -4,6 +4,7 @@ from django.shortcuts import redirect
 from django.contrib import admin
 from django.apps import apps
 
+
 class CustomAdmin(admin.ModelAdmin):
     change_list_template = "admin/excel_upload.html"
 
@@ -32,8 +33,17 @@ class CustomAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         self.autocomplete_fields = self.get_autocomplete_fields(request)
         self.raw_id_fields = self.get_raw_id_fields(request)
-        self.search_fields = self.get_search_fields(request)  # 🔥 search_fields otomatik atanıyor
-        return super().get_form(request, obj, **kwargs)
+        self.search_fields = self.get_search_fields(request)
+
+        form = super().get_form(request, obj, **kwargs)
+
+        # 🔥 Sadece PaymentMethod için ve bağlı olduğu DataSource global ise muadil alanı gizle
+        if self.model.__name__ == "PaymentMethod" and obj:
+            if getattr(obj.data_source, "is_global", False):
+                if "standard_reference" in form.base_fields:
+                    form.base_fields.pop("standard_reference")
+
+        return form
 
     def changelist_view(self, request, extra_context=None):
         if extra_context is None:
@@ -70,6 +80,7 @@ class CustomAdmin(admin.ModelAdmin):
     def redirect_to_upload_excel(self, request):
         model_name = self.model._meta.model_name
         return redirect(reverse("customs_general:upload_excel", args=[model_name]))
+
 
 # MODELLERİ TOPLU KAYDEDİYORSAN AŞAĞIDAKİ DE VAR:
 models = apps.get_app_config("customs_general").get_models()

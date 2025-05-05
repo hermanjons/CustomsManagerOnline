@@ -20,7 +20,8 @@
 {% block table_header %}
     <tr>
         {% for key in field_keys %}
-            <th>{% verbose_field_name model_field_verbose_names model key %}</th>
+            <th>{{ model_field_verbose_names|get_dict_value:key|default:key }}</th>
+
         {% endfor %}
     </tr>
 {% endblock %}

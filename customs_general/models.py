@@ -1,15 +1,48 @@
 from django.db import models
-from core.models import AuditModel
+from core.models import AuditModel, AuditModelWithSource, AuditModelWithId, AuditModelWithIdAndSource
+from django.core.exceptions import ValidationError
+
+
+class DataSource(AuditModelWithId):
+    name = models.CharField(max_length=255, unique=True)
+    source_type = models.CharField(max_length=50, choices=[
+        ("manual", "Manuel Giriş"),
+        ("import_excel", "Excel Yükleme"),
+        ("api", "API Üzerinden"),
+        ("integration", "Harici Entegrasyon"),
+        ("other", "Diğer"),
+    ])
+    description = models.TextField(blank=True, null=True)
+    is_global = models.BooleanField(default=False, verbose_name="Uluslararası Kayıt")
+    origin_country = models.ForeignKey(
+        "Country",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Kaynak Ülke"
+    )
+
+    def clean(self):
+        if self.is_global and self.origin_country is not None:
+            raise ValidationError("Uluslararası kayıtlar için ülke seçilmemelidir.")
+        if not self.is_global and self.origin_country is None:
+            raise ValidationError("Yerel kayıtlar için ülke seçilmelidir.")
+
+    def __str__(self):
+        return f"{self.name} ({self.get_source_type_display()})"
+
+    class Meta:
+        verbose_name = "Veri Kaynağı"
+        verbose_name_plural = "Veri Kaynakları"
 
 
 # Döviz Cinsi Kodları
-class CurrencyType(AuditModel):
+class CurrencyType(AuditModelWithIdAndSource):
     currency_code_3_alpha = models.CharField(max_length=30)
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=150)
     name_tr = models.CharField(max_length=150)
     minor_unit = models.CharField(max_length=10)
-
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -20,7 +53,7 @@ class CurrencyType(AuditModel):
 
 
 # Ülke Kodları
-class Country(AuditModel):
+class Country(AuditModelWithSource):
     country_code_alpha2 = models.CharField(max_length=100)
     country_code_alpha3 = models.CharField(max_length=100)
     country_name_tr = models.CharField(max_length=100)
@@ -28,36 +61,54 @@ class Country(AuditModel):
     country_number = models.CharField(max_length=100)
     country_lang_code = models.CharField(max_length=100, null=True)
     country_phone_code = models.CharField(max_length=100, null=True)
-    currency_id = models.ManyToManyField(CurrencyType, blank=True, null=True)
-
+    currency = models.ManyToManyField(CurrencyType, blank=True, null=True)
 
     def __str__(self):
         return f"{self.country_code_alpha2} - {self.country_code_alpha3} -" \
-               f" {self.country_number} - {self.currency_id}"
+               f" {self.country_number}"
 
     class Meta:
         verbose_name = "Ülke Kodları"
         verbose_name_plural = "Ülke Kodları"
 
 
-class City(AuditModel):
+class City(AuditModelWithIdAndSource):
     code = models.CharField(max_length=50, null=True)
-    name = models.CharField(max_length=255)
-    country_id = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
-    state = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=255, null=True)
+    name_alternate = models.TextField(null=True, blank=True)
+
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+
+    # Self relation - üst şehir (örnek: Bağcılar → İstanbul)
+    up_city = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="alt_yerlesimler"
+    )
+
+    # Self relation - başkent (örnek: tüm Türkiye şehirleri → Ankara)
+    capitol_city = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="baskent_altindakiler"
+    )
 
     def __str__(self):
-        return f"{self.code} - {self.name} - {self.country_id}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
-        verbose_name = "Şehirler"
+        verbose_name = "Şehir"
         verbose_name_plural = "Şehirler"
 
 
 # İşlem Niteliği Kodları
-class TransactionType(AuditModel):
+class TransactionType(AuditModelWithIdAndSource):
     code = models.CharField(max_length=10, unique=True)
-    description = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.code} - {self.description}"
@@ -68,12 +119,11 @@ class TransactionType(AuditModel):
 
 
 # Uluslararası Liman Kodları
-class Port(AuditModel):
+class Port(AuditModelWithIdAndSource):
     code = models.CharField(max_length=60, null=True, blank=True)
     name = models.CharField(max_length=100, null=True, blank=True)
-    country_id = models.ForeignKey(Country, on_delete=models.CASCADE, null=True)
-    city_id = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
-
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -84,29 +134,33 @@ class Port(AuditModel):
 
 
 # Ödeme Şekilleri
-class PaymentMethod(AuditModel):
-    code = models.CharField(max_length=10, unique=True)
+class PaymentMethod(AuditModelWithIdAndSource):
+    code = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
-    description = models.CharField(max_length=100)
-    risk_status = models.CharField(max_length=100)
-    usage_status = models.CharField(max_length=100)
-    edi_code = models.CharField(max_length=100)
+    name_en = models.CharField(max_length=200, null=True, blank=True)
 
+    standard_reference = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='localized_variants',
+        verbose_name='Muadil Referans'
+    )
 
     def __str__(self):
-        return f"{self.code} - {self.name} / {self.edi_code}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
-        verbose_name = "Ödeme Şekilleri"
+        verbose_name = "Ödeme Şekli"
         verbose_name_plural = "Ödeme Şekilleri"
 
 
-class PaymentType(AuditModel):
+class PaymentType(AuditModelWithIdAndSource):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=150)
-    risk_status = models.CharField(max_length=100)
-    usage_status = models.CharField(max_length=100)
+    name_en = models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -117,7 +171,7 @@ class PaymentType(AuditModel):
 
 
 # Tamamlayıcı Bilgi Kodları
-class AdditionalInfoCode(AuditModel):
+class AdditionalInfoCode(AuditModelWithIdAndSource):
     code = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
     value = models.CharField(max_length=255)
@@ -131,7 +185,7 @@ class AdditionalInfoCode(AuditModel):
 
 
 # Anti-Damping Vergisi Üreticisi Gönderici Firma Kodları
-class AntiDumpingCompany(AuditModel):
+class AntiDumpingCompany(AuditModelWithIdAndSource):
     code = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
 
@@ -144,7 +198,7 @@ class AntiDumpingCompany(AuditModel):
 
 
 # gümrük tipleri
-class CustomsType(AuditModel):
+class CustomsType(AuditModelWithIdAndSource):
     code = models.CharField(max_length=50, unique=False)
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
@@ -157,7 +211,7 @@ class CustomsType(AuditModel):
         verbose_name_plural = "Gümrük tipleri"
 
 
-class ChiefCustomsOffice(AuditModel):
+class ChiefCustomsOffice(AuditModelWithIdAndSource):
     code = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255, unique=True)
 
@@ -171,12 +225,12 @@ class ChiefCustomsOffice(AuditModel):
 
 # Gümrük İdareleri
 
-class CustomsOffice(AuditModel):
+class CustomsOffice(AuditModelWithIdAndSource):
     name = models.CharField(max_length=100, unique=False)
     code = models.CharField(max_length=255)
-    customs_type_id = models.ManyToManyField(CustomsType, null=True, blank=True)
-    chief_customs_id = models.ForeignKey(ChiefCustomsOffice, on_delete=models.CASCADE, null=True, blank=True)
-    city_id = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
+    customs_type = models.ManyToManyField(CustomsType, null=True, blank=True)
+    chief_customs = models.ForeignKey(ChiefCustomsOffice, on_delete=models.CASCADE, null=True, blank=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} - {self.code}"
@@ -187,9 +241,11 @@ class CustomsOffice(AuditModel):
 
 
 # Taşıma Araçları
-class TransportVehicle(AuditModel):
+class TransportVehicle(AuditModelWithIdAndSource):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
 
 
     def __str__(self):
@@ -201,7 +257,7 @@ class TransportVehicle(AuditModel):
 
 
 # Uluslararası Anlaşma Kodları
-class InternationalAgreement(AuditModel):
+class InternationalAgreement(AuditModelWithIdAndSource):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255)
 
@@ -214,20 +270,7 @@ class InternationalAgreement(AuditModel):
 
 
 # Basitleştirilmiş Usul Kodları
-class SimplifiedProcedure(AuditModel):
-    code = models.CharField(max_length=100)
-    description = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.code} - {self.description}"
-
-    class Meta:
-        verbose_name = "Basitleştirilmiş Usul Kodları"
-        verbose_name_plural = "Basitleştirilmiş Usul Kodları"
-
-
-# Liman Kodları
-class Harbor(AuditModel):
+class SimplifiedProcedure(AuditModelWithIdAndSource):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
 
@@ -235,17 +278,17 @@ class Harbor(AuditModel):
         return f"{self.code} - {self.name}"
 
     class Meta:
-        verbose_name = "Liman Kodları"
-        verbose_name_plural = "Liman Kodları"
+        verbose_name = "Basitleştirilmiş Usul Kodları"
+        verbose_name_plural = "Basitleştirilmiş Usul Kodları"
 
 
 # Muafiyet Kodları
-class ExemptionCode(AuditModel):
+class ExemptionCode(AuditModelWithIdAndSource):
     code = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.code} - {self.description}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "Muafiyet Kodları"
@@ -253,11 +296,10 @@ class ExemptionCode(AuditModel):
 
 
 # belge kodları
-class RequiredDocument(AuditModel):
+class RequiredDocument(AuditModelWithIdAndSource):
     code = models.CharField(max_length=70)
     name = models.CharField(max_length=255)
-    edi_code = models.CharField(max_length=150)
-    name_en = models.CharField(max_length=150)
+    name_en = models.CharField(max_length=150, null=True)
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -268,11 +310,11 @@ class RequiredDocument(AuditModel):
 
 
 # Havalimanı Kodları
-class Airport(AuditModel):
+class Airport(AuditModelWithIdAndSource):
     code_iata = models.CharField(max_length=10, unique=True, blank=True, null=True)
     code_icao = models.CharField(max_length=255, unique=True, blank=True, null=True)
-    city_id = models.ForeignKey(City, on_delete=models.CASCADE, blank=True, null=True)
-    country_id = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, blank=True, null=True)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=100)
     latitude_degree = models.CharField(max_length=80, blank=True, null=True)
     longitude_degree = models.CharField(max_length=100, blank=True, null=True)
@@ -299,7 +341,7 @@ class AirlineCompany(AuditModel):
 
 
 # Teslim Şekli Kodları
-class DeliveryMethod(AuditModel):
+class DeliveryMethod(AuditModelWithIdAndSource):
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=255)
     name_en = models.CharField(max_length=200)
@@ -313,10 +355,10 @@ class DeliveryMethod(AuditModel):
 
 
 # Güncel Vergi Kodları
-class TaxCode(AuditModel):
+class TaxCode(AuditModelWithIdAndSource):
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    tax_ratio = models.IntegerField(null=True)
+
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -327,16 +369,20 @@ class TaxCode(AuditModel):
 
 
 # Taşıma Türleri Kodları
-class TransportType(AuditModel):
+class TransportType(AuditModelWithIdAndSource):
     code = models.CharField(max_length=10, unique=True)
-    name_tr = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
     name_en = models.CharField(max_length=255, null=True)
-
-    edi_code = models.IntegerField(null=True)
-    e_invoice_code = models.IntegerField(null=True)
+    transport_type = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="tasima_turleri"
+    )
 
     def __str__(self):
-        return f"{self.code} - {self.name_tr}/{self.edi_code} - {self.e_invoice_code}"
+        return f"{self.code} - {self.name_en}"
 
     class Meta:
         verbose_name = "Taşıma Türleri Kodları"
@@ -344,9 +390,10 @@ class TransportType(AuditModel):
 
 
 # Kap Kodları
-class ContainerCode(AuditModel):
+class ContainerCode(AuditModelWithIdAndSource):
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -357,12 +404,12 @@ class ContainerCode(AuditModel):
 
 
 # Rejim Kodları
-class RegimeCode(AuditModel):
+class RegimeCode(AuditModelWithIdAndSource):
     code = models.CharField(max_length=10, unique=True)
-    description = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.code} - {self.description}"
+        return f"{self.code} - {self.name}"
 
     class Meta:
         verbose_name = "Rejim Kodları"
@@ -414,11 +461,11 @@ class Bank(AuditModel):
 
 
 # Bank sınıfıyla ilişkili sınıf
-class BankBranches(AuditModel):
-    bank_id = models.ForeignKey(Bank, on_delete=models.CASCADE, max_length=100)
+class BankBranches(AuditModelWithIdAndSource):
+    bank = models.ForeignKey(Bank, on_delete=models.CASCADE, max_length=100)
     branches_code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
-    city_id = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f"{self.branches_code} - {self.name}"
@@ -428,24 +475,24 @@ class BankBranches(AuditModel):
         verbose_name_plural = "Banka şubeleri"
 
 
-class QuantityType(AuditModel):
-    name = models.CharField(max_length=100)
+class QuantityType(AuditModelWithIdAndSource):
+    name = models.CharField(max_length=100, null=True)
     code = models.CharField(max_length=255)
     name_en = models.CharField(max_length=255)
-    edi_code = models.CharField(max_length=10)
+    unit_symbol = models.CharField(max_length=50, null=True)
+
 
     def __str__(self):
-        return f"{self.name} - {self.code} / {self.name_en} - {self.edi_code}"
+        return f"{self.name} - {self.code}"
 
     class Meta:
         verbose_name = "Miktar Cinsleri"
         verbose_name_plural = "Miktar cinsleri"
 
 
-class CustomerType(AuditModel):
+class CustomerType(AuditModelWithIdAndSource):
     name = models.CharField(max_length=50, unique=True)
     code = models.CharField(max_length=255)
-
 
     def __str__(self):
         return f"{self.name} - {self.code}"

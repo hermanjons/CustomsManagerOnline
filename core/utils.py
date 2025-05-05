@@ -88,11 +88,12 @@ class GenericFilteredListView(ListView):
             "field_keys": [field.name for field in visible_fields + m2m_fields],
             "field_names": [field.verbose_name for field in visible_fields + m2m_fields],
             "m2m_fields": m2m_fields,
-            "field_verbose_map": MODEL_FIELD_VERBOSE_NAMES.get(model_name, {}),
+            "model_field_verbose_names": MODEL_FIELD_VERBOSE_NAMES.get(model_name, {}),
             "query": self.request.GET.get(self.query_param, ""),
             "per_page": self.get_paginate_by(self.get_queryset()),
         })
         return context
+
 
 class AjaxFilteredListView(GenericFilteredListView):
     def render_to_response(self, context, **response_kwargs):

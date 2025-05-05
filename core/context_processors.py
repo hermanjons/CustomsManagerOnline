@@ -54,16 +54,11 @@ def site_logo_release(request):
     Site logosunu template'lere aktarır.
     Eğer dinamik bir ayar modeliniz varsa, ondan çekebilir ya da settings üzerinden statik olarak tanımlayabilirsiniz.
     """
-    # Örneğin, settings.py içinde SITE_LOGO tanımlıysa:
     if hasattr(settings, 'SITE_LOGO') and settings.SITE_LOGO:
-        site_logo = settings.SITE_LOGO  # Bu, logo URL'si veya dosya nesnesi olabilir
-        print(site_logo)
+        site_logo = static(settings.SITE_LOGO)
     else:
-        # Varsayılan logo için static dosya yolunu kullanıyoruz:
-        site_logo = static('/media/onlinecustoms.png')
-
+        # STATIC kullanarak yol veriyoruz
+        site_logo = static('onlinecustoms.png')
     return {'site_logo': site_logo}
 
 
-def model_field_verbose_names(request):
-    return {'model_field_verbose_names': MODEL_FIELD_VERBOSE_NAMES}

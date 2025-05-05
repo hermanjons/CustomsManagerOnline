@@ -7,6 +7,14 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+
+
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -18,7 +26,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-SITE_LOGO = "/media/onlinecustoms.png"
+SITE_LOGO = 'onlinecustoms.png'
+
 
 # Application definition
 
@@ -62,7 +71,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "core.context_processors.model_list",
                 "core.context_processors.site_logo_release",
-                "core.context_processors.model_field_verbose_names"
             ],
         },
     },
@@ -117,10 +125,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

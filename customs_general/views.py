@@ -21,7 +21,7 @@ class GeneralCustomsModelListView(GenericFilteredListView):
     app_label = "customs_general"
     model_param = "model"
     template_name = "customs_general/customs_general_page.html"
-    excluded_fields = ["created_at","updated_at","id","is_active"]
+    excluded_fields = ["created_at", "updated_at", "is_active", "is_global"]
 
     def dispatch(self, request, *args, **kwargs):
         model_name = kwargs.get(self.model_param) or request.GET.get(self.model_param)
@@ -69,10 +69,9 @@ def upload_excel(request, model):
                 else:
                     return JsonResponse({"success": False, "error": "Sadece .csv ve .xlsx dosyaları kabul edilir."})
 
-                # Tum dataframe icinde NaN olanlari None yapalim
                 df = df.where(pd.notnull(df), None)
 
-                field_names = [field.name for field in model_class._meta.fields if field.name != "id"]
+                field_names = [field.name for field in model_class._meta.fields]
                 foreign_keys = {
                     field.name: field.remote_field.model
                     for field in model_class._meta.fields
@@ -80,41 +79,44 @@ def upload_excel(request, model):
                 }
                 many_to_many_fields = [field.name for field in model_class._meta.many_to_many]
 
+                self_relation_fields = [
+                    field.name for field in model_class._meta.fields
+                    if isinstance(field, models.ForeignKey) and field.remote_field.model == model_class
+                ]
+
                 required_fields = [
                     field.name for field in model_class._meta.fields
                     if not field.null and not field.blank and not isinstance(field, models.AutoField)
                 ]
-                print("zorunlu alanlar:", required_fields)
 
                 created_count = 0
                 failed_rows = []
                 total = len(df)
                 request.session['upload_progress'] = 0
 
+                temp_id_map = {}
+
+                # === 1. AŞAMA: SELF-FK OLMAYAN ALANLARLA OBJELERİ OLUŞTUR ===
                 for index, row in df.iterrows():
                     try:
-                        missing_required = False
+                        record_id = row.get("id")
+                        if record_id is None:
+                            raise ValueError("Excel'de 'id' alanı boş!")
+                        record_id = int(record_id)
 
+                        # Zorunlu alan kontrolü
                         for field_name in required_fields:
                             val = row.get(field_name)
                             if val in [None, '', ' '] or (isinstance(val, float) and math.isnan(val)):
-                                missing_required = True
-                                print(f"Zorunlu alan eksik: {field_name}")
-                                break
-
-                        if missing_required:
-                            raise ValueError("Eksik zorunlu alan")
+                                raise ValueError(f"Zorunlu alan eksik: {field_name}")
 
                         obj_data = {}
                         for field in field_names:
-                            if field not in many_to_many_fields:
+                            if field not in many_to_many_fields and field not in self_relation_fields:
                                 value = row.get(field)
-
-                                # NaN veya bos deger kontrolu
                                 if value in [None, '', ' '] or (isinstance(value, float) and math.isnan(value)):
                                     value = None
 
-                                # ForeignKey alanlar icin lookup
                                 if field in foreign_keys and value is not None:
                                     fk_model = foreign_keys[field]
                                     value = fk_model.objects.get(id=int(value))
@@ -122,28 +124,24 @@ def upload_excel(request, model):
                                 obj_data[field] = value
 
                         obj = model_class.objects.create(**obj_data)
+                        temp_id_map[record_id] = obj
 
-                        # ManyToMany alanlari ayarlayalim
+                        # ManyToMany alan işlemleri
                         for m2m_field in many_to_many_fields:
                             if m2m_field in df.columns:
                                 value = row.get(m2m_field)
-
                                 if value not in [None, '', ' '] and not (
                                         isinstance(value, float) and math.isnan(value)):
                                     ids = []
                                     for val in str(value).split(','):
-                                        val = val.strip()
-                                        if val:
-                                            try:
-                                                ids.append(int(float(val)))
-                                            except ValueError:
-                                                pass
+                                        try:
+                                            ids.append(int(float(val.strip())))
+                                        except ValueError:
+                                            pass
                                     model_field = model_class._meta.get_field(m2m_field)
                                     related_model = model_field.related_model
                                     m2m_objs = related_model.objects.filter(id__in=ids)
                                     getattr(obj, m2m_field).set(m2m_objs)
-                                else:
-                                    pass
 
                         created_count += 1
 
@@ -153,8 +151,31 @@ def upload_excel(request, model):
                             'hata': str(e)
                         })
 
-                    progress = int(((index + 1) / total) * 100)
-                    request.session['upload_progress'] = progress
+                    request.session['upload_progress'] = int(((index + 1) / total) * 100)
+
+                # === 2. AŞAMA: SELF-FK ALANLARI GÜNCELLE ===
+                for index, row in df.iterrows():
+                    try:
+                        record_id = int(row.get("id"))
+                        obj = temp_id_map.get(record_id)
+                        if not obj:
+                            continue
+
+                        for field in self_relation_fields:
+                            relation_id = row.get(field)
+                            if relation_id is not None:
+                                try:
+                                    relation_id = int(relation_id)
+                                    related_instance = temp_id_map.get(relation_id)
+                                    if related_instance:
+                                        setattr(obj, field, related_instance)
+                                except Exception as e:
+                                    print(f"[SelfRelation WARN] Satır {index+2}, alan '{field}': {e}")
+
+                        obj.save()
+                    except Exception as e:
+                        print(f"[SelfRelation ERROR] Satır {index+2}: {e}")
+                        continue
 
                 request.session['upload_progress'] = 100
                 request.session['failed_rows'] = failed_rows
@@ -174,6 +195,9 @@ def upload_excel(request, model):
 
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
+
+
+
 
 
 def upload_progress(request):

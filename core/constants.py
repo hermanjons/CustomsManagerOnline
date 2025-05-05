@@ -37,6 +37,7 @@ MODEL_ICONS = {
     "uploadeddocuments": "📎",  # Yüklenen Belgeler
     "products": "🛍️",  # Ürünler
     "gtipcode": "📑",  # GTİP Kodları
+    "datasource": "🧩",  # Veri Kaynağı
 }
 
 # core/constants.py
@@ -49,43 +50,48 @@ MODEL_FIELD_VERBOSE_NAMES = {
         'country_number': 'Ülke Numarası',
         'country_lang_code': 'Dil Kodu',
         'country_phone_code': 'Telefon Kodu',
-        'currency_id': 'Para Birimleri',
+        'currency': 'Para Birimleri',
+        'data_source': 'Veri Kaynağı'
     },
     'currencytype': {
         'currency_code_3_alpha': 'Para Birimi Kodu',
         'name': 'Para Birimi Adı(EN)',
-        'code' : 'Para Birimi Numarası',
-        'minor_unit' : 'Alt Birim',
-        'name_tr' : 'Para Birimi Adı'
+        'code': 'Para Birimi Numarası',
+        'minor_unit': 'Alt Birim',
+        'name_tr': 'Para Birimi Adı',
+        'data_source': 'Veri Kaynağı'
     },
     'city': {
         'code': 'Kodu',
         'name': 'Adı',
-        'country_id': 'Ülke Adı',
-        'state': 'Eyalet',
+        'country': 'Ülke Adı',
+        'up_city': 'Üst Yerleşim',
+        'capitol_city': 'Başkent',
+        'data_source': 'Veri Kaynağı',
+        'name_alternate': 'Alternatif Adı'
     },
 
     'paymentmethod': {
         'code': 'Kodu',
         'name': 'Adı',
-        'description': 'Açıklama',
-        'risk_status': 'Risk Durumu',
-        'usage_status': 'Kullanım Sıklığı',
-        'edi_code': 'EDİ Kodu'
+        'name_en': 'Adı(EN)',
+        'data_source': 'Veri Kaynağı',
+        'standard_reference': 'Standart Referans Kodu'
+
     },
 
     'paymenttype': {
         'code': 'Kodu',
         'name': 'Adı',
         'description': 'Açıklama',
-        'risk_status': 'Risk Durumu',
-        'usage_status': 'Kullanım Sıklığı',
-        'edi_code': 'EDİ Kodu'
+        'data_source': 'Veri Kaynağı',
+        'name_en': 'Adı(EN)'
     },
     'customstype': {
         'code': 'Kodu',
         'name': 'Adı',
         'description': 'Açıklama',
+        'data_source': 'Veri Kaynağı'
 
     },
     'chiefcustomsoffice': {
@@ -99,67 +105,76 @@ MODEL_FIELD_VERBOSE_NAMES = {
     'customsoffice': {
         'code': 'Gümrük Kodu',
         'name': 'Gümrük Adı',
-        'customs_type_id': 'Gümrük Tipi',
-        'chief_customs_id': 'Üst Müdürlük Kodu',
-        'city_id': 'Şehir'
+        'customs_type': 'Gümrük Tipi',
+        'chief_customs': 'Üst Müdürlük Kodu',
+        'city': 'Şehir',
+        'data_source': 'Veri Kaynağı'
     },
     'port': {
 
         'code': 'Kodu',
         'name': 'Adı',
-        'country_id': 'Ülke'
+        'country': 'Ülke',
+        'city': 'Şehir',
+        'data_source': 'Veri Kaynağı'
     },
     'requireddocument': {
 
         'code': 'Kodu',
         'name': 'Adı',
         'name_en': 'Adı(EN)',
-        'edi_code': "Edi Kodu"
+        'edi_code': "Edi Kodu",
+        'data_source': 'Veri Kaynağı'
     },
     'deliverymethod': {
 
         'code': 'Kodu',
         'name': 'Adı',
         'name_en': 'Adı(EN)',
+        'data_source': 'Veri Kaynağı'
 
     },
     'airport': {
         'code_iata': 'IATA Kodu',
         'code_icao': 'ICAO Kodu',
-        'city_id': 'Yerleşim',
-        'country_id': 'Ülke',
+        'city': 'Yerleşim',
+        'country': 'Ülke',
         'name': 'Adı',
         'latitude_degree': 'Enlem',
-        'longitude_degree': 'Boylam'
+        'longitude_degree': 'Boylam',
+        'data_source': 'Veri kaynağı'
     },
     'taxcode': {
 
         'code': 'Kodu',
         'name': 'Adı',
-        'tax_ratio': 'Oranı(%)',
+        'data_source': 'Veri Kaynağı'
 
     },
 
     'transporttype': {
 
         'code': 'Kodu',
-        'name_tr': 'Adı',
+        'name': 'Adı',
         'name_en': 'Adı(EN)',
-        'edi_code': "EDİ Kodu",
-        "e_invoice_code": 'E-Fatura Kodu'
+        'transport_type': 'Standart Referansı',
+        'data_source': 'Veri Kaynağı'
 
     },
     'containercode': {
 
         'code': 'Kodu',
         'name': 'Adı',
+        'name_en': 'Adı(EN)',
+        'data_source': 'Veri Kaynağı'
     },
     'quantitytype': {
 
         'code': 'Kodu',
         'name': 'Adı',
         'name_en': 'Adı(EN)',
-        'edi_code': "EDİ Kodu",
+        'unit_symbol': "Sembol",
+        'data_source': 'Veri Kaynağı'
     },
 
     'bank': {
@@ -174,14 +189,33 @@ MODEL_FIELD_VERBOSE_NAMES = {
 
         'code': 'Kodu',
         'name': 'Adı',
+        'data_source': 'Veri Kaynağı'
     },
     'bankbranches': {
 
-        'bank_id': 'Banka',
+        'bank': 'Banka',
         'name': 'Şube Adı',
-        'branches_code' : 'Şube Kodu',
-        'city_id' : 'Şehir'
+        'branches_code': 'Şube Kodu',
+        'city': 'Şehir',
+        'data_source': 'Veri Kaynağı'
     },
+    'datasource': {
+
+        'name': 'Adı',
+        'source_type': 'Tipi',
+        'description': 'Açıklama',
+        'origin_country': 'Yayımlayan Ülke'
+    },
+    'transportvehicle': {
+
+        'data_source' : 'Veri Kaynağı',
+        'code' : 'Kodu',
+        'name' : 'Adı',
+        'name_en' : 'Adı(EN)',
+        'description' : 'Açıklama'
+    }
+
+
 }
 
 # constants.py
@@ -191,5 +225,8 @@ FK_M2M_REPRESENTATIVE_FIELDS = {
     "CurrencyType": "name_tr",
     "ChiefCustomsOffice": "code",
     "CustomsType": "code",
-    "Bank": 'bank_name'
+    "Bank": 'bank_name',
+    "DataSource": 'name',
+    'PaymentMethod': 'code',
+    'TransportType': 'code'
 }
