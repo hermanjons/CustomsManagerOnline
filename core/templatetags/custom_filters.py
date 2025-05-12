@@ -22,21 +22,9 @@ def get_dict_value(dictionary, key):
     return dictionary.get(key, key)
 
 
-@register.simple_tag
-def verbose_field_name(field_verbose_names, model, field):
-    """
-    Model ve field için güzel görünen ismi döner.
-    Eğer bulamazsa field adını olduğu gibi döner.
-    """
-    return field_verbose_names.get(model, {}).get(field, field)
-
-
 @register.filter
 def render_field(obj, field_name):
     value = getattr(obj, field_name, None)
-
-    if value is None:
-        return "-"
 
     # Eğer değer bir ForeignKey ise
     if hasattr(value, "_meta"):
@@ -58,9 +46,8 @@ def render_field(obj, field_name):
             for item in value.all():
                 rep_value = getattr(item, representative_field, None)
                 if rep_value:
-                    reps.append(f'<button class="btn btn-outline-primary btn-sm" style="margin:2px;" onclick="openModelDetail(\'{model_name}\', {item.pk})">{rep_value}</button>')
-
-
+                    reps.append(
+                        f'<button class="btn btn-outline-primary btn-sm" style="margin:2px;" onclick="openModelDetail(\'{model_name}\', {item.pk})">{rep_value}</button>')
 
             return ", ".join(reps)
         return ", ".join([str(item) for item in value.all()])

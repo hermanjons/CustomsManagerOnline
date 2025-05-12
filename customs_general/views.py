@@ -10,7 +10,7 @@ from django.db import models
 import io
 from django.core.files.base import ContentFile
 import math
-from core.utils import GenericFilteredListView
+from core.views import GenericFilteredListView
 
 
 class GeneralCustomsModelListView(GenericFilteredListView):
@@ -31,23 +31,17 @@ class GeneralCustomsModelListView(GenericFilteredListView):
             return render(request, "model_not_found.html", {"model": model_name})
         return super().dispatch(request, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
 
-def fetch_model_detail(request, model_name, pk):
-    try:
-        model_class = apps.get_model("customs_general", model_name)
-        obj = model_class.objects.get(pk=pk)
-        data = {}
+        if request.GET.get("detail") == "1":
 
-        for field in model_class._meta.fields:
-            value = getattr(obj, field.name, None)
-            if value is not None:
-                data[field.verbose_name] = str(value)
-            else:
-                data[field.verbose_name] = "-"
+            pk = kwargs.get("pk")
+            return self.get_object_detail_json(pk)
+        else:
+            print(request.GET)
 
-        return JsonResponse(data)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        return super().get(request, *args, **kwargs)
+
 
 
 @staff_member_required

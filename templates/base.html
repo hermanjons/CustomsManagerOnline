@@ -215,25 +215,50 @@
 <script>
 function openModelDetail(modelName, objectId) {
     const urlTemplate = "{% url 'customs_general:fetch_model_detail' 'MODEL_NAME' 0 %}";
-    const url = urlTemplate.replace('MODEL_NAME', modelName).replace('/0/', `/${objectId}/`);
-    fetch(url)
-    .then(response => response.json())
-    .then(data => {
-        let html = '<ul class="list-group">';
-        for (const [key, value] of Object.entries(data)) {
-            html += `<li class="list-group-item"><strong>${key}:</strong> ${value}</li>`;
-        }
-        html += '</ul>';
-        document.getElementById('modelDetailModalBody').innerHTML = html;
+    const url = urlTemplate
+        .replace('MODEL_NAME', modelName)
+        .replace('/0/', `/${objectId}/`) + '?detail=1';
 
-        var modal = new bootstrap.Modal(document.getElementById('modelDetailModal'));
-        modal.show();
-    })
-    .catch(error => {
-        console.error('Detay çekilirken hata oluştu:', error);
-    });
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const keys = data.field_keys;
+            const labels = data.model_field_verbose_names;
+            const values = data.data;
+            const m2mFields = data.m2m_field_names || [];
+
+            let html = `<h5 class="mb-3">${data.model_display_name || modelName} Detayı</h5>`;
+            html += '<ul class="list-group">';
+
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i];
+                const label = labels[key] || key;
+                const value = values[key] ?? '-';
+
+                const m2mBadge = m2mFields.includes(key)
+                    ? `<span class="badge bg-secondary float-end">M2M</span>`
+                    : '';
+
+                html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>${label}:</strong> ${value}</div>
+                            ${m2mBadge}
+                         </li>`;
+            }
+
+            html += '</ul>';
+            document.getElementById('modelDetailModalBody').innerHTML = html;
+
+            const modal = new bootstrap.Modal(document.getElementById('modelDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Detay çekilirken hata oluştu:', error);
+        });
 }
 </script>
+
+
+
 
 
     <script>

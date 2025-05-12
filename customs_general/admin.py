@@ -5,8 +5,11 @@ from django.contrib import admin
 from django.apps import apps
 
 
+
 class CustomAdmin(admin.ModelAdmin):
+
     change_list_template = "admin/excel_upload.html"
+
 
     def get_autocomplete_fields(self, request):
         """ForeignKey ve ManyToMany alanları otomatik autocomplete yap."""
@@ -18,7 +21,8 @@ class CustomAdmin(admin.ModelAdmin):
             autocomplete.append(m2m_field.name)
         return autocomplete
 
-    def get_raw_id_fields(self, request):
+    @staticmethod
+    def get_raw_id_fields(request):
         """Gerekirse burada raw_id_fields ekleyebiliriz. Şu an boş."""
         return []
 
@@ -28,13 +32,10 @@ class CustomAdmin(admin.ModelAdmin):
         for field in self.model._meta.fields:
             if field.get_internal_type() in ['CharField', 'TextField']:
                 search_fields.append(field.name)
+
         return search_fields
 
     def get_form(self, request, obj=None, **kwargs):
-        self.autocomplete_fields = self.get_autocomplete_fields(request)
-        self.raw_id_fields = self.get_raw_id_fields(request)
-        self.search_fields = self.get_search_fields(request)
-
         form = super().get_form(request, obj, **kwargs)
 
         # 🔥 Sadece PaymentMethod için ve bağlı olduğu DataSource global ise muadil alanı gizle
@@ -75,6 +76,7 @@ class CustomAdmin(admin.ModelAdmin):
                 name=f'admin_upload_excel_{model_name}'
             ),
         ]
+        print(custom_urls)
         return custom_urls + urls
 
     def redirect_to_upload_excel(self, request):

@@ -502,14 +502,12 @@ class CustomerType(AuditModelWithIdAndSource):
         verbose_name_plural = "Müşteri tipleri"
 
 
-class GtipCode(AuditModel):
-    code = models.CharField(max_length=100)
-    desc = models.CharField(max_length=255)
-    quantity = models.CharField(max_length=50)
-    tax_code = models.ForeignKey(TaxCode, on_delete=models.PROTECT)
+class GtipCode(AuditModelWithIdAndSource):
+    code = models.CharField(max_length=100, null=True, blank=True)
+    desc = models.TextField(null=True)
 
     def __str__(self):
-        return f"{self.code} - {self.desc} - {self.quantity} - {self.tax_code}"
+        return f"{self.code} - {self.desc}"
 
     class Meta:
         verbose_name = "GTİP Kodları"

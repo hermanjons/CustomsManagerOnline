@@ -3,7 +3,7 @@ from customs_general.models import TaxCode, GtipCode
 from .forms import BrandForm, ProductModelForm, ProductsForm, UploadedDocsForm
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
-from core.utils import GenericFilteredListView, AjaxFilteredListView
+from core.views import GenericFilteredListView, AjaxFilteredListView
 
 
 class BrandCreateView(CreateView):
