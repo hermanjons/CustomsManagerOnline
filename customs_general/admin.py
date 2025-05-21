@@ -76,7 +76,6 @@ class CustomAdmin(admin.ModelAdmin):
                 name=f'admin_upload_excel_{model_name}'
             ),
         ]
-        print(custom_urls)
         return custom_urls + urls
 
     def redirect_to_upload_excel(self, request):

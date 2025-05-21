@@ -24,7 +24,7 @@ class AuditModel(TimeStampedModel, SoftDeleteModel):
 
 
 class AuditModelWithId(AuditModel):
-    id = models.IntegerField(primary_key=True, unique=True)
+    id = models.IntegerField(primary_key=True)
 
     class Meta:
         abstract = True
@@ -39,8 +39,7 @@ class AuditModelWithSource(AuditModel):
         abstract = True
 
 
-class AuditModelWithIdAndSource(AuditModelWithSource):
-    id = models.IntegerField(primary_key=True, unique=True)
+class AuditModelWithIdAndSource(AuditModelWithSource, AuditModelWithId):
 
     class Meta:
         abstract = True

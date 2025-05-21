@@ -40,8 +40,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var progressContainer = document.getElementById("progressContainer");
     var progressBar = document.getElementById("progressBar");
 
-    var fakeProgress = 0;
-    var fakeProgressInterval;
+
 
     btn.onclick = function() {
         modal.style.display = "block";
@@ -61,33 +60,38 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     };
 
-    function startFakeProgress() {
-        fakeProgress = 0;
-        progressBar.style.width = "0%";
-        progressBar.innerText = "0%";
-        fakeProgressInterval = setInterval(() => {
-            if (fakeProgress < 95) {
-                fakeProgress += Math.floor(Math.random() * 5) + 1;
-                if (fakeProgress > 95) fakeProgress = 95;
-                progressBar.style.width = fakeProgress + "%";
-                progressBar.innerText = fakeProgress + "%";
+
+
+function pollRealProgress() {
+    fetch("{% url 'customs_general:upload_progress' %}")
+        .then(response => {
+            console.log("➡️ Status:", response.status);
+            return response.json();  // ❗❗❗ Buraya dikkat
+        })
+        .then(data => {
+            let progress = data.progress || 0;
+            progressBar.style.width = progress + "%";
+            progressBar.innerText = progress + "%";
+
+            if (progress < 100) {
+                setTimeout(pollRealProgress, 500);
             }
-        }, 500);
-    }
 
-    function finishFakeProgress() {
-        clearInterval(fakeProgressInterval);
-        progressBar.style.width = "100%";
-        progressBar.innerText = "100%";
-    }
+        })
+        .catch(error => {
+            console.error("Progress kontrolü başarısız:", error);
+            alert("⛔ Hata: " + error);
+        });
+}
 
-    function resetProgress() {
-        clearInterval(fakeProgressInterval);
+
+
+function resetProgress() {
         progressBar.style.width = "0%";
         progressBar.innerText = "0%";
     }
 
-    form.onsubmit = function(event) {
+form.onsubmit = function(event) {
         event.preventDefault();
 
         var formData = new FormData(form);
@@ -95,7 +99,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
         progressContainer.style.display = "block";
         resetProgress();
-        startFakeProgress();
+        pollRealProgress();  // gerçek olan bu
+
+
 
         fetch("{% url 'customs_general:upload_excel' model_name %}", {
             method: "POST",
@@ -103,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(response => response.json())
         .then(data => {
-            finishFakeProgress();
+
             if (data.success) {
                 messageDiv.innerHTML = "<span style='color:green;'>✅ " + data.message + "</span>";
 
@@ -118,10 +124,11 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         })
         .catch(error => {
-            finishFakeProgress();
+
             messageDiv.innerHTML = "<span style='color:red;'>❌ Bir hata oluştu!</span>";
         });
     };
+
 });
 </script>
 

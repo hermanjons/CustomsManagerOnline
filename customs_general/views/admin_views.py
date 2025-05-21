@@ -1,46 +1,19 @@
-from django.apps import apps
 import pandas as pd
 from django.http import JsonResponse, HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from core.constants import MODEL_ICONS
-from django.shortcuts import render
+
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.db import models
 import io
 from django.core.files.base import ContentFile
 import math
-from core.views import GenericFilteredListView
+
+from django.core.cache import cache
+from django.apps import apps
 
 
-class GeneralCustomsModelListView(GenericFilteredListView):
-    """
-    customs_general uygulamasındaki tanım modellerini listelemek için
-    dinamik olarak çalışan generic view sınıfı.
-    """
-    app_label = "customs_general"
-    model_param = "model"
-    template_name = "customs_general/customs_general_page.html"
-    excluded_fields = ["created_at", "updated_at", "is_active", "is_global"]
-
-    def dispatch(self, request, *args, **kwargs):
-        model_name = kwargs.get(self.model_param) or request.GET.get(self.model_param)
-        try:
-            self.model = apps.get_model(self.app_label, model_name)
-        except LookupError:
-            return render(request, "model_not_found.html", {"model": model_name})
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-
-        if request.GET.get("detail") == "1":
-
-            pk = kwargs.get("pk")
-            return self.get_object_detail_json(pk)
-        else:
-            print(request.GET)
-
-        return super().get(request, *args, **kwargs)
 
 
 
@@ -50,6 +23,7 @@ def upload_excel(request, model):
         model_class = apps.get_model("customs_general", model)
 
         if request.method == "POST":
+
             if "excel_file" not in request.FILES:
                 return JsonResponse({"success": False, "error": "Excel dosyası eksik!"})
 
@@ -65,28 +39,31 @@ def upload_excel(request, model):
 
                 df = df.where(pd.notnull(df), None)
 
-                field_names = [field.name for field in model_class._meta.fields]
-                foreign_keys = {
-                    field.name: field.remote_field.model
-                    for field in model_class._meta.fields
-                    if isinstance(field, models.ForeignKey)
-                }
+                field_names = []
+                foreign_keys = {}
+                self_relation_fields = []
+                required_fields = []
+
+                for field in model_class._meta.fields:
+                    field_names.append(field.name)
+
+                    if isinstance(field, models.ForeignKey):
+                        foreign_keys[field.name] = field.remote_field.model
+
+                        if field.remote_field.model == model_class:
+                            self_relation_fields.append(field.name)
+
+                    if not field.null and not field.blank and not isinstance(field, models.AutoField):
+                        required_fields.append(field.name)
+
                 many_to_many_fields = [field.name for field in model_class._meta.many_to_many]
 
-                self_relation_fields = [
-                    field.name for field in model_class._meta.fields
-                    if isinstance(field, models.ForeignKey) and field.remote_field.model == model_class
-                ]
 
-                required_fields = [
-                    field.name for field in model_class._meta.fields
-                    if not field.null and not field.blank and not isinstance(field, models.AutoField)
-                ]
 
                 created_count = 0
                 failed_rows = []
                 total = len(df)
-                request.session['upload_progress'] = 0
+
 
                 temp_id_map = {}
 
@@ -94,28 +71,31 @@ def upload_excel(request, model):
                 for index, row in df.iterrows():
                     try:
                         record_id = row.get("id")
-                        if record_id is None:
-                            raise ValueError("Excel'de 'id' alanı boş!")
-                        record_id = int(record_id)
-
-                        # Zorunlu alan kontrolü
-                        for field_name in required_fields:
-                            val = row.get(field_name)
-                            if val in [None, '', ' '] or (isinstance(val, float) and math.isnan(val)):
-                                raise ValueError(f"Zorunlu alan eksik: {field_name}")
+                        try:
+                            record_id = int(record_id)
+                        except (ValueError, TypeError):
+                            raise TypeError("Excel'deki 'id' alanı geçerli bir sayı olmalı!")
 
                         obj_data = {}
                         for field in field_names:
-                            if field not in many_to_many_fields and field not in self_relation_fields:
-                                value = row.get(field)
-                                if value in [None, '', ' '] or (isinstance(value, float) and math.isnan(value)):
-                                    value = None
 
-                                if field in foreign_keys and value is not None:
+                            val = row.get(field)
+                            if val in [None, '', ' '] or (isinstance(val, float) and math.isnan(val)):
+
+                                if field in required_fields:
+                                    raise ValueError(f"Zorunlu alan eksik:{field}")
+                                else:
+                                    val = None
+                                    obj_data[field] = val
+
+                            else:
+                                if field not in self_relation_fields and field in foreign_keys:
                                     fk_model = foreign_keys[field]
-                                    value = fk_model.objects.get(id=int(value))
+                                    val = fk_model.objects.get(id=int(val))
+                                    obj_data[field] = val
+                                else:
+                                    obj_data[field] = val
 
-                                obj_data[field] = value
 
                         obj = model_class.objects.create(**obj_data)
                         temp_id_map[record_id] = obj
@@ -145,7 +125,8 @@ def upload_excel(request, model):
                             'hata': str(e)
                         })
 
-                    request.session['upload_progress'] = int(((index + 1) / total) * 100)
+                    # user_views.py içinde
+                    cache.set(f"upload_progress:{request.user.id}", int(((index + 1) / total*2) * 100), timeout=20)
 
                 # === 2. AŞAMA: SELF-FK ALANLARI GÜNCELLE ===
                 for index, row in df.iterrows():
@@ -167,12 +148,16 @@ def upload_excel(request, model):
                                     print(f"[SelfRelation WARN] Satır {index+2}, alan '{field}': {e}")
 
                         obj.save()
+                        user_id = getattr(request.user, "id", None)
+                        progress = cache.get(f"upload_progress:{user_id}", 0)
+                        cache.set(f"upload_progress:{request.user.id}", progress + int(((index + 1) / total * 2) * 100),
+                                  timeout=20)
+
                     except Exception as e:
                         print(f"[SelfRelation ERROR] Satır {index+2}: {e}")
                         continue
 
-                request.session['upload_progress'] = 100
-                request.session['failed_rows'] = failed_rows
+                cache.set(f"failed_rows:{request.user.id}", failed_rows, timeout=300)
 
                 return JsonResponse({
                     "success": True,
@@ -193,15 +178,23 @@ def upload_excel(request, model):
 
 
 
-
+@staff_member_required
 def upload_progress(request):
-    progress = request.session.get('upload_progress', 0)
-    return JsonResponse({'progress': progress})
+    user_id = getattr(request.user, "id", None)
+    if not user_id:
+        return JsonResponse({"progress": 0, "debug": "user not logged in"})
+    progress = cache.get(f"upload_progress:{user_id}", 0)
+
+    return JsonResponse({"progress": progress})
+
+
+
 
 
 @staff_member_required
 def download_failed_rows(request, model):
-    failed_rows = request.session.get('failed_rows')
+    cache_key = f"failed_rows:{request.user.id}"
+    failed_rows = cache.get(cache_key)
 
     if not failed_rows:
         return HttpResponse("İndirilecek hata bulunamadı.", content_type="text/plain")
@@ -209,9 +202,11 @@ def download_failed_rows(request, model):
     df = pd.DataFrame(failed_rows)
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=failed_rows.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={model}_hatalar.xlsx'
 
     with pd.ExcelWriter(response, engine='openpyxl') as writer:
         df.to_excel(writer, index=False)
+
+    cache.delete(cache_key)  # İndirildikten sonra temizle (isteğe bağlı)
 
     return response

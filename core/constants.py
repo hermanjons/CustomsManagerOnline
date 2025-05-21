@@ -97,8 +97,7 @@ MODEL_FIELD_VERBOSE_NAMES = {
     'chiefcustomsoffice': {
         'code': 'Kodu',
         'name': 'Adı',
-        'code_accountancy': 'Saymanlık Kodu',
-        'name_accountancy': 'Saymanlık Adı'
+        'data_source': 'Veri Kaynağı'
 
     },
 
@@ -208,13 +207,60 @@ MODEL_FIELD_VERBOSE_NAMES = {
     },
     'transportvehicle': {
 
-        'data_source' : 'Veri Kaynağı',
-        'code' : 'Kodu',
-        'name' : 'Adı',
-        'name_en' : 'Adı(EN)',
-        'description' : 'Açıklama'
-    }
+        'data_source': 'Veri Kaynağı',
+        'code': 'Kodu',
+        'name': 'Adı',
+        'name_en': 'Adı(EN)',
+        'description': 'Açıklama'
+    },
+    'gtipcode': {
+        'data_source': 'Veri Kaynağı',
+        'code': 'Kodu',
+        'desc': 'Açıklama'
 
+    },
+    "transactiontype": {
+
+        'code': 'Kodu',
+        'name': ' Adı',
+        'data_source': 'Veri Kaynağı'
+    },
+    'additionalinfocode': {
+        'code': 'Kodu',
+        'description': 'Açıklama',
+        'value': 'Değeri',
+        'data_source': 'Veri Kaynağı'
+    },
+    'antidumpingcompany': {
+        'code': 'Kodu',
+        'name': 'Adı',
+        'data_source': 'Veri Kaynağı'
+
+    },
+    'internationalagreement': {
+        'code': 'Kodu',
+        'name': 'Adı',
+        'data_source': 'Veri Kaynağı'
+
+    },
+    'simplifiedprocedure': {
+        'code': 'Kodu',
+        'name': 'Adı',
+        'data_source': 'Veri Kaynağı'
+
+    },
+    'exemptioncode': {
+        'code': 'Kodu',
+        'name': 'Adı',
+        'data_source': 'Veri Kaynağı'
+
+    },
+    'regimecode': {
+        'code': 'Kodu',
+        'name': 'Adı',
+        'data_source': 'Veri Kaynağı'
+
+    }
 
 }
 
