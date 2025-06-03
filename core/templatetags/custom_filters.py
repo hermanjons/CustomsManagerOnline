@@ -33,7 +33,8 @@ def render_field(obj, field_name):
         if representative_field:
             rep_value = getattr(value, representative_field, None)
             if rep_value:
-                return f'<button class="btn btn-outline-primary btn-sm" style="margin:2px;" onclick="openModelDetail(\'{model_name}\', {value.pk})">{rep_value}</button>'
+                return f'<button class="btn btn-outline-primary btn-sm" style="margin:2px;"' \
+                       f' onclick="openModelDetail(\'{model_name}\', {value.pk})">{rep_value}</button>'
 
         return str(value)
 
@@ -47,7 +48,8 @@ def render_field(obj, field_name):
                 rep_value = getattr(item, representative_field, None)
                 if rep_value:
                     reps.append(
-                        f'<button class="btn btn-outline-primary btn-sm" style="margin:2px;" onclick="openModelDetail(\'{model_name}\', {item.pk})">{rep_value}</button>')
+                        f'<button class="btn btn-outline-primary btn-sm" style="margin:2px;" '
+                        f'onclick="openModelDetail(\'{model_name}\', {item.pk})">{rep_value}</button>')
 
             return ", ".join(reps)
         return ", ".join([str(item) for item in value.all()])

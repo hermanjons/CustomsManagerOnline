@@ -19,31 +19,64 @@
 
     <style>
         body {
-            display: flex;
-            height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
         }
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: row;
+        }
         .sidebar {
-            width: 270px;
-            height: 100%;
-            background: #343a40;
-            color: white;
-            padding: 15px;
-            position: fixed;
-            transition: all 0.3s;
-            overflow-y: auto;
-        }
-        .sidebar .logo-area {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .sidebar .logo-area img {
-            max-width: 150px;
-            height: auto;
-            border-radius: 5px;
-        }
+        width: 270px;
+        background: #343a40;
+        color: white;
+        padding: 15px;
+        overflow-y: auto;
+        max-height: 100vh;  /* önemli */
+        position: sticky;
+        top: 0;
+    }
+
+        .logo-area {
+    text-align: center;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    padding: 14px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    animation: floatIn 0.6s ease-out;
+}
+
+.logo-area:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.logo-area img {
+    max-width: 160px;
+    height: auto;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+}
+
+.logo-area img:hover {
+    transform: scale(1.02) rotate(-1deg);
+}
+
+/* İlk açılışta yumuşak fade-in animasyonu */
+@keyframes floatIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
         .sidebar a {
             color: white;
@@ -61,7 +94,6 @@
             background: #28a745;
             transform: translateX(12px);
         }
-
         .submenu {
             display: none;
             padding-left: 15px;
@@ -77,38 +109,28 @@
             background: #198754;
         }
         .content {
-            margin-left: 260px;
-            padding: 20px;
             flex-grow: 1;
-            width: 100%;
+            padding: 20px;
             background-color: white;
-            border-left: 1px solid #ddd;
         }
-        /* Logo alanı için stil düzenlemesi */
-        .logo-area {
-            text-align: center;
-            margin-bottom: 15px;
-            background-color: #ffffff;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
-        }
-        .logo-area:hover {
-            transform: scale(1.03);
-        }
-        .logo-area img {
-            max-width: 150px;
-            height: auto;
-            border-radius: 5px;
+
+        @media (max-width: 768px) {
+            .wrapper {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: relative;
+            }
+            .content {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
-
 <body>
-    <!-- Sidebar (Menü) -->
+<div class="wrapper">
     <div class="sidebar">
-        <!-- Logo Alanı -->
         <div class="logo-area">
             {% if site_logo %}
                 <img src="{{ site_logo }}" alt="Site Logo">
@@ -118,186 +140,70 @@
         </div>
 
         <a href="{% url 'dashboard_home' %}">🏠 Ana Sayfa</a>
-
-        <!-- Ürün İşlemleri Submenu -->
+    {% if urun_islemleri_models %}
         <a href="#" id="toggleProductsLink">🛍️ Ürün İşlemleri</a>
         <div class="submenu" id="productsSubmenu">
-            {% if urun_islemleri_models %}
-                {% for item in urun_islemleri_models %}
-                    {% if item.model == "brand" %}
-                        <a href="{% url 'brand_page_view' %}">
-                            {{ item.icon }} {{ item.display_name }}
-                        </a>
-                    {% elif item.model == "productmodel" %}
-                        <a href="{% url 'model_page_view' %}">
-                            {{ item.icon }} {{ item.display_name }}
-                        </a>
-                    {% elif item.model == "products" %}
-                        <a href="{% url 'products_page_view' %}">
-                            {{ item.icon }} {{ item.display_name }}
-                        </a>
-                    {% elif item.model == "uploadeddocuments" %}
-                        <a href="{% url 'uploaded_docs_view' %}">
-                            {{ item.icon }} {{ item.display_name }}
-                        </a>
-                    {% else %}
-                        <a href="#">{{ item.icon }} {{ item.display_name }}</a>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <a href="#">❌ Tanımlı model bulunamadı.</a>
-            {% endif %}
+            {% for item in urun_islemleri_models %}
+                {% if item.model == "brand" %}
+                    <a href="{% url 'brand_page_view' %}">{{ item.icon }} {{ item.display_name }}</a>
+                {% elif item.model == "productmodel" %}
+                    <a href="{% url 'model_page_view' %}">{{ item.icon }} {{ item.display_name }}</a>
+                {% elif item.model == "products" %}
+                    <a href="{% url 'products_page_view' %}">{{ item.icon }} {{ item.display_name }}</a>
+                {% elif item.model == "uploadeddocuments" %}
+                    <a href="{% url 'uploaded_docs_view' %}">{{ item.icon }} {{ item.display_name }}</a>
+                {% else %}
+                    <a href="#">{{ item.icon }} {{ item.display_name }}</a>
+                {% endif %}
+            {% endfor %}
         </div>
+    {% endif %}
 
-        <!-- Genel Tanımlamalar Submenu -->
-        <a href="#" id="toggleGeneralDefinitionsLink">
-            📂 Genel Tanımlamalar ⬇
-        </a>
-        <div class="submenu" id="generalDefinitionsList">
-            {% if genel_tanimlamalar_models %}
-                {% for model in genel_tanimlamalar_models %}
-                    <a href="{% url 'customs_general:model_data' model=model.model %}">
-                        {{ model.icon }} {{ model.display_name }}
-                    </a>
+
+      {% if genel_tanimlamalar_models or diger_models %}
+    <a href="#" id="toggleGeneralDefinitionsLink">📂 Genel Tanımlamalar ⬇</a>
+    <div class="submenu" id="generalDefinitionsList">
+
+        {% if genel_tanimlamalar_models %}
+            {% for model in genel_tanimlamalar_models %}
+                <a href="{% url 'customs_general:model_data' model=model.model %}">{{ model.icon }} {{ model.display_name }}</a>
+            {% endfor %}
+        {% endif %}
+
+        {% if diger_models %}
+            <a href="#" id="toggleDigerLink">📁 Diğer</a>
+            <div class="submenu" id="digerSubmenu">
+                {% for model in diger_models %}
+                    <a href="{% url 'customs_general:model_data' model=model.model %}">{{ model.icon }} {{ model.display_name }}</a>
                 {% endfor %}
-            {% else %}
-                <a href="#">❌ Tanımlı model bulunamadı.</a>
-            {% endif %}
-
-            <!-- Diğer submenu -->
-            {% if diger_models %}
-                <a href="#" id="toggleDigerLink">📁 Diğer</a>
-                <div class="submenu" id="digerSubmenu">
-                    {% for model in diger_models %}
-                        <a href="{% url 'customs_general:model_data' model=model.model %}">
-                            {{ model.icon }} {{ model.display_name }}
-                        </a>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-    </div>
-
-    <!-- İçerik Alanı -->
-    <div class="content">
-        {% block content %}
-        {% endblock %}
-    </div>
-
-    <!-- Modal Image Viewer -->
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-transparent border-0">
-                <div class="modal-body p-0 text-center">
-                    <img src="" id="modalImage" class="img-fluid" alt="Büyütülmüş Görsel">
-                </div>
             </div>
-        </div>
+        {% endif %}
+
+    </div>
+{% endif %}
     </div>
 
-
-    <!-- Model Detay Modalı -->
-<div class="modal fade" id="modelDetailModal" tabindex="-1" aria-labelledby="modelDetailModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modelDetailModalLabel">Detaylar</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="modelDetailModalBody">
-        <!-- Model detayları burada gösterilecek -->
-      </div>
+    <div class="content">
+        {% block content %}{% endblock %}
     </div>
-  </div>
-</div>
+    </div>
 
 <script>
-function openModelDetail(modelName, objectId) {
-    const urlTemplate = "{% url 'customs_general:fetch_model_detail' 'MODEL_NAME' 0 %}";
-    const url = urlTemplate
-        .replace('MODEL_NAME', modelName)
-        .replace('/0/', `/${objectId}/`) + '?detail=1';
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const keys = data.field_keys;
-            const labels = data.model_field_verbose_names;
-            const values = data.data;
-            const m2mFields = data.m2m_field_names || [];
-
-            let html = `<h5 class="mb-3">${data.model_display_name || modelName} Detayı</h5>`;
-            html += '<ul class="list-group">';
-
-            for (let i = 0; i < keys.length; i++) {
-                const key = keys[i];
-                const label = labels[key] || key;
-                const value = values[key] ?? '-';
-
-                const m2mBadge = m2mFields.includes(key)
-                    ? `<span class="badge bg-secondary float-end">M2M</span>`
-                    : '';
-
-                html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div><strong>${label}:</strong> ${value}</div>
-                            ${m2mBadge}
-                         </li>`;
-            }
-
-            html += '</ul>';
-            document.getElementById('modelDetailModalBody').innerHTML = html;
-
-            const modal = new bootstrap.Modal(document.getElementById('modelDetailModal'));
-            modal.show();
-        })
-        .catch(error => {
-            console.error('Detay çekilirken hata oluştu:', error);
+    $(document).ready(function() {
+        $("#toggleProductsLink").click(function(e) {
+            e.preventDefault();
+            $("#productsSubmenu").slideToggle();
         });
-}
+        $("#toggleGeneralDefinitionsLink").click(function(e) {
+            e.preventDefault();
+            $("#generalDefinitionsList").slideToggle();
+        });
+        $("#toggleDigerLink").click(function(e) {
+            e.preventDefault();
+            $("#digerSubmenu").slideToggle();
+        });
+    });
 </script>
 
-
-
-
-
-    <script>
-        $(document).ready(function() {
-            // Ürün İşlemleri submenu'sunu toggle et
-            $("#toggleProductsLink").click(function(e) {
-                e.preventDefault();
-                $("#productsSubmenu").slideToggle();
-            });
-            // Genel Tanımlamalar submenu'sunu toggle et
-            $("#toggleGeneralDefinitionsLink").click(function(e) {
-                e.preventDefault();
-                $("#generalDefinitionsList").slideToggle();
-            });
-            // Diğer submenu'sunu toggle et
-            $("#toggleDigerLink").click(function(e) {
-                e.preventDefault();
-                $("#digerSubmenu").slideToggle();
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            function bindImageClicks(selector) {
-                var images = document.querySelectorAll(selector);
-                images.forEach(function(img) {
-                    img.addEventListener('click', function() {
-                        var modalImage = document.getElementById('modalImage');
-                        modalImage.src = this.getAttribute('data-image') || this.src;
-                        var modal = new bootstrap.Modal(document.getElementById('imageModal'));
-                        modal.show();
-                    });
-                });
-            }
-
-            bindImageClicks('.clickable-image');
-            bindImageClicks('.clickable-product-image');
-
-            twemoji.parse(document.body);
-        });
-    </script>
 </body>
 </html>

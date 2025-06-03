@@ -1,0 +1,27 @@
+{% extends "accounts/base_auth.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <h3 class="mb-4">Giriş Yap</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="mb-3">
+                    {{ form.username.label_tag }}
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+                <div class="mb-3">
+                    {{ form.password.label_tag }}
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </div>
+                <button type="submit" class="btn btn-primary">Giriş</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -276,3 +276,23 @@ FK_M2M_REPRESENTATIVE_FIELDS = {
     'PaymentMethod': 'code',
     'TransportType': 'code'
 }
+
+SYSTEM_FIELDS = [
+    "record_uuid", "created_by", "updated_by",
+    "custom_model", "created_at", "updated_at"
+
+]
+
+
+# constants.py
+
+ROLE_ADMIN = "admin"
+ROLE_MUSAVIR = "consultant"
+ROLE_MUSTERI = "client"
+
+# Roller bazında erişim kısıtlaması: app bazlı
+ROLE_APP_BLACKLIST = {
+    ROLE_MUSTERI: ["customs_general"],  # müşteri genel tanımlamaları görmesin
+    ROLE_MUSAVIR: ["products"],         # müşavir ürünlerle ilgilenmesin
+    # admin her şeye erişebilir
+}

@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-^abm&y8kl9g2zkk8g^y7-!!)oc)cza0hk#n1r8h33-k5g9)+yd
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 SITE_LOGO = 'onlinecustoms.png'
 
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'products',
     'widget_tweaks',
     'core',
+    'accounts'
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.user_tracking.CurrentUserMiddleware'
 ]
 
 ROOT_URLCONF = 'CustomsManagerOnline.urls'
@@ -71,6 +73,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "core.context_processors.model_list",
                 "core.context_processors.site_logo_release",
+                "core.context_processors.user_role"
             ],
         },
     },
@@ -85,7 +88,7 @@ WSGI_APPLICATION = 'CustomsManagerOnline.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'customs_db',
+        'NAME': 'customs_manager_db',
         'USER': 'postgres',
         'PASSWORD': 'postgretest',
         'HOST': 'localhost',
@@ -124,6 +127,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

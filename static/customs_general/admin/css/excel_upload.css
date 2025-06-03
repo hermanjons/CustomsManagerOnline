@@ -1,0 +1,98 @@
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: green;
+    height: 100%;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    transition: width 0.6s ease;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.excel-upload-btn {
+    background: green;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+.hidden-25 {
+    height: 25px;
+    display: none;
+    margin-top: 20px;
+}
+
+.mt-15 {
+    margin-top: 15px;
+}
+
+.hidden {
+  display: none;
+}
+
+.message-box {
+  font-weight: bold;
+  margin-top: 15px;
+}
+
+.message-success {
+  color: green;
+}
+
+.message-error {
+  color: red;
+}
+
+.failed-download-link {
+  display: inline-block;
+  background: darkred;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-decoration: none;
+}

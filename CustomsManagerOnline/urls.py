@@ -19,15 +19,15 @@ from django.urls import path, include
 from django.shortcuts import redirect
 from django.conf import settings
 from django.conf.urls.static import static
-
+from accounts.views import index_redirect_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('customs_general/', include('customs_general.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('products/', include('products.urls')),
-    path('', lambda request: redirect('/dashboard/')),
-
+    path('accounts/', include('accounts.urls')),
+    path('', index_redirect_view),
 ]
 
 

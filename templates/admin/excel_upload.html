@@ -1,12 +1,24 @@
 {% extends "admin/change_list.html" %}
+
 {% load static %}
 
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'customs_general/admin/css/excel_upload.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% static 'customs_general/admin/js/excel_upload.js' %}"></script>
+{% endblock %}
+
 {% block content %}
-<div style="margin-bottom: 10px;">
-    <button id="openExcelModal" class="button" style="background:green; color:white; padding:10px; border-radius:5px;">
-        📤 Excel ile Yükle
+<div class="mb-10">
+    <button id="openExcelModal" class="button excel-upload-btn">
+        📤 Excel ile Yükle +
     </button>
 </div>
+
 
 <div id="excelUploadModal" class="modal">
     <div class="modal-content">
@@ -20,125 +32,34 @@
             <button type="submit" class="button">📤 Yüklemeye Başla</button>
         </form>
 
-        <div id="progressContainer" class="progress mt-3" style="height: 25px; display: none; margin-top: 20px;">
-            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+        <div id="progressContainer" class="progress mt-3 hidden-25">
+        <div id="progressBar" class="progress-bar" role="progressbar"></div>
+        </div>
+        <div id="uploadMessage" class="message-box hidden">
+        <span id="uploadSuccess" class="message-success hidden">✅ <span id="successMessageText"></span></span>
+        <span id="uploadError" class="message-error hidden">❌ <span id="errorMessageText"></span></span>
+        <span id="uploadFailedRows" class="message-error hidden">
+        ⚠️ <span id="failedRowCountText"></span> satırda hata oluştu!
+        <br>
+        <a id="failedDownloadLink" class="failed-download-link" href="#">📥 Hatalı Satırları İndir</a>
+        </span>
         </div>
 
-        <div id="uploadMessage" style="margin-top: 15px;"></div>
     </div>
 </div>
 
-{{ block.super }}
+
+<!-- Mesaj kutusu -->
+
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    var modal = document.getElementById("excelUploadModal");
-    var btn = document.getElementById("openExcelModal");
-    var span = document.getElementsByClassName("close")[0];
-    var form = document.getElementById("excelUploadForm");
-    var messageDiv = document.getElementById("uploadMessage");
-    var progressContainer = document.getElementById("progressContainer");
-    var progressBar = document.getElementById("progressBar");
-
-
-
-    btn.onclick = function() {
-        modal.style.display = "block";
+    const config = {
+        uploadProgressUrl: "{% url 'customs_general:upload_progress' %}",
+        uploadExcelUrl: "{% url 'customs_general:upload_excel' model_name %}"
     };
-
-    span.onclick = function() {
-        modal.style.display = "none";
-        messageDiv.innerHTML = "";
-        resetProgress();
-    };
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-            messageDiv.innerHTML = "";
-            resetProgress();
-        }
-    };
-
-
-
-function pollRealProgress() {
-    fetch("{% url 'customs_general:upload_progress' %}")
-        .then(response => {
-            console.log("➡️ Status:", response.status);
-            return response.json();  // ❗❗❗ Buraya dikkat
-        })
-        .then(data => {
-            let progress = data.progress || 0;
-            progressBar.style.width = progress + "%";
-            progressBar.innerText = progress + "%";
-
-            if (progress < 100) {
-                setTimeout(pollRealProgress, 500);
-            }
-
-        })
-        .catch(error => {
-            console.error("Progress kontrolü başarısız:", error);
-            alert("⛔ Hata: " + error);
-        });
-}
-
-
-
-function resetProgress() {
-        progressBar.style.width = "0%";
-        progressBar.innerText = "0%";
-    }
-
-form.onsubmit = function(event) {
-        event.preventDefault();
-
-        var formData = new FormData(form);
-        var modelName = "{{ model_name }}";
-
-        progressContainer.style.display = "block";
-        resetProgress();
-        pollRealProgress();  // gerçek olan bu
-
-
-
-        fetch("{% url 'customs_general:upload_excel' model_name %}", {
-            method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-
-            if (data.success) {
-                messageDiv.innerHTML = "<span style='color:green;'>✅ " + data.message + "</span>";
-
-                if (data.failed_rows_count > 0) {
-                    messageDiv.innerHTML += `
-                        <br><span style='color:red;'>⚠️ ${data.failed_rows_count} satırda hata oluştu!</span>
-                        <br><a href="${data.failed_rows_download_url}" class="button" style="margin-top:10px; display:inline-block; background:red; color:white; padding:8px 15px; border-radius:5px;">📥 Hatalı Satırları İndir</a>
-                    `;
-                }
-            } else {
-                messageDiv.innerHTML = "<span style='color:red;'>❌ Hata: " + data.error + "</span>";
-            }
-        })
-        .catch(error => {
-
-            messageDiv.innerHTML = "<span style='color:red;'>❌ Bir hata oluştu!</span>";
-        });
-    };
-
-});
 </script>
+<script src="{% static 'customs_general/admin/js/excel_upload.js' %}"></script>
 
-<style>
-.modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-.modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 50%; border-radius: 10px; text-align: center; }
-.close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-.close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
-.progress { background-color: #e9ecef; border-radius: 10px; overflow: hidden; }
-.progress-bar { background-color: green; height: 100%; text-align: center; color: white; font-weight: bold; transition: width 0.6s ease; }
-</style>
 
+{{ block.super }}
 {% endblock %}

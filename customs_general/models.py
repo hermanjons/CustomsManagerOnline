@@ -61,7 +61,7 @@ class Country(AuditModelWithSource):
     country_number = models.CharField(max_length=100)
     country_lang_code = models.CharField(max_length=100, null=True)
     country_phone_code = models.CharField(max_length=100, null=True)
-    currency = models.ManyToManyField(CurrencyType, blank=True, null=True)
+    currency = models.ManyToManyField(CurrencyType, blank=True)
 
     def __str__(self):
         return f"{self.country_code_alpha2} - {self.country_code_alpha3} -" \
@@ -228,7 +228,7 @@ class ChiefCustomsOffice(AuditModelWithIdAndSource):
 class CustomsOffice(AuditModelWithIdAndSource):
     name = models.CharField(max_length=100, unique=False)
     code = models.CharField(max_length=255)
-    customs_type = models.ManyToManyField(CustomsType, null=True, blank=True)
+    customs_type = models.ManyToManyField(CustomsType, blank=True)
     chief_customs = models.ForeignKey(ChiefCustomsOffice, on_delete=models.CASCADE, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
 

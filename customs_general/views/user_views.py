@@ -1,9 +1,10 @@
 from django.apps import apps
 from django.shortcuts import render
-from core.views import GenericFilteredListView
+from core.views.views import GenericFilteredListView
+from core.views.mixins import RoleRequiredMixin
 
 
-class GeneralCustomsModelListView(GenericFilteredListView):
+class GeneralCustomsModelListView(RoleRequiredMixin, GenericFilteredListView):
     """
     customs_general uygulamasındaki tanım modellerini listelemek için
     dinamik olarak çalışan generic view sınıfı.
@@ -11,7 +12,9 @@ class GeneralCustomsModelListView(GenericFilteredListView):
     app_label = "customs_general"
     model_param = "model"
     template_name = "customs_general/customs_general_page.html"
-    excluded_fields = ["created_at", "updated_at", "is_active", "is_global"]
+    excluded_fields = ["is_active", "is_global", "id", "created_at", "updated_at",
+                       "updated_by", "created_by", "record_uuid", "system_note"]
+    allowed_roles = ["consultant"]  # Kimler görebilir?
 
     def dispatch(self, request, *args, **kwargs):
         model_name = kwargs.get(self.model_param) or request.GET.get(self.model_param)
@@ -31,7 +34,3 @@ class GeneralCustomsModelListView(GenericFilteredListView):
             print(request.GET)
 
         return super().get(request, *args, **kwargs)
-
-
-
-

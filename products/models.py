@@ -1,8 +1,7 @@
 from django.db import models
 from customs_general.models import RequiredDocument, CurrencyType, QuantityType, GtipCode, ContainerCode, \
     TaxCode, Country
-
-from core.utils import date_based_upload_path
+from core.models import UploadedDocumentsBase
 
 
 class Brand(models.Model):
@@ -36,13 +35,12 @@ class ProductModel(models.Model):
         verbose_name_plural = "Model"
 
 
-class UploadedDocuments(models.Model):
+class UploadedDocuments(UploadedDocumentsBase):
     doc_type = models.ForeignKey(RequiredDocument, on_delete=models.CASCADE)
-    doc_name = models.CharField(max_length=255)
-    doc_file = models.FileField(upload_to=date_based_upload_path)
+    custom_model = True
 
     def __str__(self):
-        return f"{self.doc_name} - {self.doc_type}"
+        return f"{self.product_model}"
 
     class Meta:
         verbose_name = "Yüklenen Dökümanlar"

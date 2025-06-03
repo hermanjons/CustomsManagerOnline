@@ -3,9 +3,9 @@ from core.constants import MODEL_ICONS, \
     MODEL_FIELD_VERBOSE_NAMES  # MODEL_ICONS sabitlerinizi tanımladığınız dosyadan import edin
 from django.conf import settings
 from django.templatetags.static import static
+from .constants import ROLE_APP_BLACKLIST
 
-
-DIGER_MODELLER = ['transactiontype', 'additionalinfocode', 'antidumpingcompany','chiefcustomsoffice',
+DIGER_MODELLER = ['transactiontype', 'additionalinfocode', 'antidumpingcompany', 'chiefcustomsoffice',
                   'transportvehicle', 'internationalagreement', 'simplifiedprocedure', 'harbor', 'exemptioncode',
                   'airlinecompany', 'regimecode', 'warehouse']
 
@@ -13,16 +13,19 @@ DIGER_MODELLER = ['transactiontype', 'additionalinfocode', 'antidumpingcompany',
 def model_list(request):
     """
     Uygulamalardan modelleri çekip context'e ekler:
-    - "customs_general" uygulamasına ait modeller: genel_tanimlamalar altında
-    - "products" uygulamasına ait modeller: ürün işlemleri altında
-    - Belirli modeller: "diğer" başlığı altında
+    App bazlı rol filtrelemesi yapılır.
     """
-
     genel_tanimlamalar_models = []
     urun_islemleri_models = []
     diger_models = []
-
+    user_role = getattr(request.user, "role", None)
+    blacklisted_apps = ROLE_APP_BLACKLIST.get(user_role, [])
     for app_config in apps.get_app_configs():
+        # App rol erişim filtresi
+        if app_config.label in blacklisted_apps:
+            print("geçildi")
+            continue
+
         for model in app_config.get_models():
             model_name = model._meta.model_name
             icon = MODEL_ICONS.get(model_name, "❓")
@@ -32,7 +35,6 @@ def model_list(request):
                 "icon": icon,
             }
 
-            # Eğer model diğer grubuna aitse
             if model_name in DIGER_MODELLER:
                 diger_models.append(item)
             elif app_config.label == 'customs_general':
@@ -62,3 +64,7 @@ def site_logo_release(request):
     return {'site_logo': site_logo}
 
 
+def user_role(request):
+    if request.user.is_authenticated:
+        return {"user_role": request.user.role}
+    return {}
