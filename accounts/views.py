@@ -1,7 +1,11 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .forms import LoginForm
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render, redirect
+from accounts.models import ClientProfile
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+
 
 def login_view(request):
     form = LoginForm(request, data=request.POST or None)
@@ -17,10 +21,25 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form})
 
 
-
-
 def index_redirect_view(request):
     if request.user.is_authenticated:
         return redirect('/dashboard/')
     else:
         return redirect('login')  # name='login' olan URL'e gider
+
+
+@login_required
+def select_active_client(request, client_id):
+    user = request.user
+
+    # Sadece müşavirler bu işlemi yapabilir
+    if user.role != "consultant":
+        return HttpResponseForbidden("Bu işlem sadece müşavirler içindir.")
+
+    # Sadece kendisine atanmış client'ı seçebilsin
+    client = get_object_or_404(ClientProfile, id=client_id, consultants=user)
+    print(client.id)
+    request.session["active_client_id"] = client.id
+
+    # İsteğe bağlı: dashboard'a yönlendir
+    return redirect("dashboard_home")

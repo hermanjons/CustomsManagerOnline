@@ -1,10 +1,10 @@
 from django.db import models
 from customs_general.models import RequiredDocument, CurrencyType, QuantityType, GtipCode, ContainerCode, \
     TaxCode, Country
-from core.models import UploadedDocumentsBase
+from core.models import UploadedDocumentsBase, AuditModel
 
 
-class Brand(models.Model):
+class Brand(AuditModel):
     brand_name = models.CharField(max_length=100)
     brand_code = models.CharField(max_length=100)
     brand_activate_number = models.CharField(max_length=100)
@@ -22,7 +22,7 @@ class Brand(models.Model):
         verbose_name_plural = "Marka"
 
 
-class ProductModel(models.Model):
+class ProductModel(AuditModel):
     product_model = models.CharField(max_length=100)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     custom_model = True
@@ -47,7 +47,7 @@ class UploadedDocuments(UploadedDocumentsBase):
         verbose_name_plural = "Yüklenen Dökümanlar"
 
 
-class Products(models.Model):
+class Products(AuditModel):
     prod_name = models.CharField(max_length=255)
     prod_price = models.CharField(max_length=50)
     currency_type = models.ForeignKey(CurrencyType, on_delete=models.PROTECT)

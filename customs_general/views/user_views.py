@@ -14,7 +14,7 @@ class GeneralCustomsModelListView(RoleRequiredMixin, GenericFilteredListView):
     template_name = "customs_general/customs_general_page.html"
     excluded_fields = ["is_active", "is_global", "id", "created_at", "updated_at",
                        "updated_by", "created_by", "record_uuid", "system_note"]
-    allowed_roles = ["consultant"]  # Kimler görebilir?
+    allowed_roles = ["consultant", "admin"]  # Kimler görebilir?
 
     def dispatch(self, request, *args, **kwargs):
         model_name = kwargs.get(self.model_param) or request.GET.get(self.model_param)

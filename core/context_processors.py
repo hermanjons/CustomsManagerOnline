@@ -5,9 +5,26 @@ from django.conf import settings
 from django.templatetags.static import static
 from .constants import ROLE_APP_BLACKLIST
 
+from accounts.models import ClientProfile
+
 DIGER_MODELLER = ['transactiontype', 'additionalinfocode', 'antidumpingcompany', 'chiefcustomsoffice',
                   'transportvehicle', 'internationalagreement', 'simplifiedprocedure', 'harbor', 'exemptioncode',
                   'airlinecompany', 'regimecode', 'warehouse']
+
+
+def assigned_clients_context(request):
+    user = request.user
+    context = {}
+
+    if user.is_authenticated and user.role == "consultant":
+        # Sadece kendisini müşavir olarak kabul etmiş müşteriler
+        assigned_clients = ClientProfile.objects.filter(consultants=user)
+        context["assigned_clients"] = assigned_clients
+        active_client_id = request.session.get("active_client_id")
+        if active_client_id:
+            context["active_client"] = assigned_clients.filter(id=active_client_id).first()
+
+    return context
 
 
 def model_list(request):

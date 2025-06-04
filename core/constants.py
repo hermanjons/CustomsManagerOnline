@@ -293,6 +293,6 @@ ROLE_MUSTERI = "client"
 # Roller bazında erişim kısıtlaması: app bazlı
 ROLE_APP_BLACKLIST = {
     ROLE_MUSTERI: ["customs_general"],  # müşteri genel tanımlamaları görmesin
-    ROLE_MUSAVIR: ["products"],         # müşavir ürünlerle ilgilenmesin
+    ROLE_MUSAVIR: [],         # müşavir ürünlerle ilgilenmesin
     # admin her şeye erişebilir
 }

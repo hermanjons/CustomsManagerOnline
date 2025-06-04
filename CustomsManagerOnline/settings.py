@@ -73,7 +73,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "core.context_processors.model_list",
                 "core.context_processors.site_logo_release",
-                "core.context_processors.user_role"
+                "core.context_processors.user_role",
+                "core.context_processors.assigned_clients_context"
             ],
         },
     },
