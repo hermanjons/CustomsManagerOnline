@@ -43,25 +43,43 @@ def create_objects(df, model_class, meta, total, on_progress=None):
             for field in meta['field_names']:
                 val = row.get(field)
 
+                # Eksik veya boş veri kontrolü
                 if val in [None, '', ' '] or (isinstance(val, float) and math.isnan(val)):
                     if field in meta['required_fields']:
                         raise ValueError(f"Zorunlu alan eksik: {field}")
                     obj_data[field] = None
-                else:
-                    if field not in meta['self_relation_fields'] and field in meta['foreign_keys']:
-                        fk_model = meta['foreign_keys'][field]
-                        obj_data[field] = fk_model.objects.get(id=int(val))
-                    else:
-                        obj_data[field] = val
+                    continue
 
+                # SELF-RELATION alanlar için ilk aşamada boş geç
+                if field in meta['self_relation_fields']:
+                    obj_data[field] = None
+                    continue
+
+                # ForeignKey alanları için instance çek
+                if field in meta['foreign_keys']:
+                    fk_model = meta['foreign_keys'][field]
+                    try:
+                        # Float veya string gibi gelen id'leri düzgün parse et
+                        if isinstance(val, float) and val.is_integer():
+                            val = int(val)
+                        elif isinstance(val, str) and val.replace('.', '', 1).isdigit():
+                            val = int(float(val))
+                        obj_data[field] = fk_model.objects.get(id=val)
+                    except (fk_model.DoesNotExist, ValueError, TypeError):
+                        raise ValueError(f"{field} alanı için FK bulunamadı: {val}")
+                else:
+                    obj_data[field] = val
+
+            # Nesneyi oluştur
             obj = model_class.objects.create(**obj_data)
             temp_id_map[record_id] = obj
 
+            # M2M alanlar
             for m2m_field in meta['m2m_fields']:
                 if m2m_field in df.columns:
                     value = row.get(m2m_field)
                     if value not in [None, '', ' '] and not (isinstance(value, float) and math.isnan(value)):
-                        ids = [int(float(v.strip())) for v in str(value).split(',') if v.strip().isdigit()]
+                        ids = [int(float(v.strip())) for v in str(value).split(',') if v.strip().replace('.', '', 1).isdigit()]
                         model_field = model_class._meta.get_field(m2m_field)
                         related_model = model_field.related_model
                         m2m_objs = related_model.objects.filter(id__in=ids)
@@ -72,11 +90,11 @@ def create_objects(df, model_class, meta, total, on_progress=None):
         except Exception as e:
             failed_rows.append({'satir': index + 2, 'hata': str(e)})
 
-        # Dışarıdan verilen ilerleme fonksiyonu varsa çağır
         if on_progress:
             on_progress(index + 1, total)
 
     return created_count, failed_rows, temp_id_map
+
 
 
 def update_self_relations(df, model_class, meta, temp_id_map, total, on_progress=None):

@@ -27,6 +27,26 @@ def assigned_clients_context(request):
     return context
 
 
+def assigned_consultants_context(request):
+    user = request.user
+    context = {}
+
+    if user.is_authenticated and user.role == "client":
+        # Kendi profilini al
+        client_profile = getattr(user, "client_profile", None)
+        if client_profile:
+            # Kendisine bağlı olan müşavirleri al
+            assigned_consultants = client_profile.consultants.all()
+            context["assigned_consultants"] = assigned_consultants
+
+            # Aktif seçilen müşavir varsa session'dan al
+            active_consultant_id = request.session.get("active_consultant_id")
+            if active_consultant_id:
+                context["active_consultant"] = assigned_consultants.filter(id=active_consultant_id).first()
+
+    return context
+
+
 def model_list(request):
     """
     Uygulamalardan modelleri çekip context'e ekler:
@@ -40,7 +60,6 @@ def model_list(request):
     for app_config in apps.get_app_configs():
         # App rol erişim filtresi
         if app_config.label in blacklisted_apps:
-            print("geçildi")
             continue
 
         for model in app_config.get_models():

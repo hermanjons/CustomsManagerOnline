@@ -38,8 +38,30 @@ def select_active_client(request, client_id):
 
     # Sadece kendisine atanmış client'ı seçebilsin
     client = get_object_or_404(ClientProfile, id=client_id, consultants=user)
-    print(client.id)
     request.session["active_client_id"] = client.id
 
     # İsteğe bağlı: dashboard'a yönlendir
+    return redirect("dashboard_home")
+
+
+
+@login_required
+def select_active_consultant(request, consultant_id):
+    user = request.user
+
+    # Sadece müşteriler bu işlemi yapabilir
+    if user.role != "client":
+        return HttpResponseForbidden("Bu işlem sadece müşteriler içindir.")
+
+    # Kullanıcının bağlı olduğu müşavirler arasından seçim yapılabilir
+    client_profile = getattr(user, "client_profile", None)
+    if not client_profile:
+        return HttpResponseForbidden("Profil bulunamadı.")
+
+    consultant = get_object_or_404(client_profile.consultants, id=consultant_id)
+
+    # Seçilen müşaviri session'a kaydet
+    request.session["active_consultant_id"] = consultant.id
+
+    # Örneğin dashboard'a yönlendirebilirsin
     return redirect("dashboard_home")

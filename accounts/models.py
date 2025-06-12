@@ -69,7 +69,7 @@ class ClientProfile(models.Model):
     iban = models.CharField(max_length=34, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     tax_number = models.CharField(max_length=20, blank=True, null=True)
-    consultants = models.ManyToManyField(  # 👈 Burası yeni
+    consultants = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name="consulted_clients",
         limit_choices_to={'role': 'consultant'},
