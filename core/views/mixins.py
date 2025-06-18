@@ -7,10 +7,22 @@ from accounts.models import ClientProfile
 class RoleRequiredMixin(UserPassesTestMixin):
     allowed_roles = []
 
+    @property
+    def effective_allowed_roles(self):
+        """
+        allowed_roles + admin her zaman erişebilir → otomatik olarak admin'i de ekleriz.
+        Böylece view'larda 'admin' yazmak zorunda kalmayız.
+        """
+        return self.allowed_roles + ['admin'] if 'admin' not in self.allowed_roles else self.allowed_roles
+
     def test_func(self):
         user = self.request.user
 
-        # 1️⃣ Role kontrolü
+        # 0️⃣ Eğer admin ise → direkt izin ver → diğer kontrolleri atla.
+        if user.role == "admin":
+            return True
+
+        # 1️⃣ Role kontrolü (admin dışındaki roller için geçerli)
         if not (user.is_authenticated and user.role in self.allowed_roles):
             return False
 

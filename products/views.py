@@ -9,7 +9,7 @@ from accounts.models import ClientProfile
 
 
 class RoleBasedListView(RoleRequiredMixin, GenericFilteredListView):
-    client_field_in_model = "created_by"  # Modelde client'i tutan field adı (default olarak created_by)
+    client_field_in_model = "created_by"# Modelde client'i tutan field adı (default olarak created_by)
 
     def get_queryset(self):
         user = self.request.user
@@ -20,9 +20,7 @@ class RoleBasedListView(RoleRequiredMixin, GenericFilteredListView):
 
         # Eğer kullanıcı müşavir ise ve bir müşteri seçmişse
         elif user.role == "consultant":
-            print("rol: müşavir ")
             active_client_id = self.request.session.get("active_client_id")
-            print("aktif müşterinin id değeri (session'dan):", active_client_id)
 
             if active_client_id:
                 try:
@@ -36,6 +34,8 @@ class RoleBasedListView(RoleRequiredMixin, GenericFilteredListView):
 
             return self.model.objects.none()
 
+        else:
+            return self.model.objects.filter()
 
 
 class BrandCreateView(RoleRequiredMixin, CreateView):
@@ -52,7 +52,6 @@ class ProductModelCreateView(RoleRequiredMixin, CreateView):
     form_class = ProductModelForm
     template_name = 'products/model_create.html'
     success_url = reverse_lazy('model_page_view')
-
 
 
 class BrandListView(RoleBasedListView):
@@ -76,8 +75,6 @@ class ProductsListView(RoleBasedListView):
     related_search_fields = ["brand__brand_name"]
     context_object_name = 'products'
     allowed_roles = ["client", "consultant"]
-
-
 
 
 class ProductsCreateView(RoleRequiredMixin, CreateView):

@@ -28,29 +28,7 @@
         <tr>
             {% for key in field_keys %}
                 <td>
-                    {% if key == "brand_logo" %}
-                        {% with logo=object|getattr_custom:key %}
-                            {% if logo %}
-                                <img src="{{ logo.url }}" alt="Logo" class="img-thumbnail clickable-image" style="max-width: 100px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageModal">
-                            {% else %}
-                                -
-                            {% endif %}
-                        {% endwith %}
-                    {% else %}
-                        {% if key in m2m_fields %}
-                            {% with related_objects=object|getattr_custom:key %}
-                                {% if related_objects %}
-                                    {% for currency in related_objects %}
-                                        <span style="color:blue">{{ currency }}</span>{% if not forloop.last %}, {% endif %}
-                                    {% endfor %}
-                                {% else %}
-                                    <span style="color:red">ManyToMany Boş!</span>
-                                {% endif %}
-                            {% endwith %}
-                        {% else %}
-                            {{ object|render_field:key|safe }}
-                        {% endif %}
-                    {% endif %}
+                        {{ object|render_field:key|safe }}
                 </td>
             {% endfor %}
         </tr>

@@ -8,7 +8,7 @@ from django.apps import apps
 
 class CustomAdmin(admin.ModelAdmin):
 
-    change_list_template = "admin/excel_upload.html"
+    change_list_template = "customs_general/admin/excel_upload.html"
 
 
     def get_autocomplete_fields(self, request):

@@ -6,4 +6,4 @@ from django.views.generic import TemplateView
 
 class DashboardHomeView(RoleRequiredMixin, TemplateView):
     template_name = "dashboard/index.html"
-    allowed_roles = ["client", "consultant", "admin"]
+    allowed_roles = ["client", "consultant"]

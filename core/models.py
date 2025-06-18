@@ -1,5 +1,5 @@
 from django.db import models
-from .current_user import get_current_user
+from core.utils.context_utils import get_current_user
 from django.conf import settings
 import uuid
 from .utils.utils import date_based_upload_path

@@ -5,6 +5,7 @@ from .forms import ClientProfileForm, ConsultantProfileForm
 
 
 # Kullanıcı modeli için özelleştirilmiş admin
+@admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     list_display = ('username', 'email', 'role', 'is_staff', 'is_superuser')
@@ -27,7 +28,6 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
 
 
-admin.site.register(CustomUser, CustomUserAdmin)
 
 
 @admin.register(ClientProfile)

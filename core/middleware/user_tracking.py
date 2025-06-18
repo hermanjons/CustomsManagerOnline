@@ -1,4 +1,4 @@
-from core.current_user import set_current_user
+from core.utils.context_utils import set_current_user
 
 
 class CurrentUserMiddleware:

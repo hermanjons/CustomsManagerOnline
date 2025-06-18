@@ -40,7 +40,7 @@ class UploadedDocuments(UploadedDocumentsBase):
     custom_model = True
 
     def __str__(self):
-        return f"{self.product_model}"
+        return f"{self.doc_name}"
 
     class Meta:
         verbose_name = "Yüklenen Dökümanlar"
