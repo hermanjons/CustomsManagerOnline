@@ -4,38 +4,14 @@ from .forms import BrandForm, ProductModelForm, ProductsForm, UploadedDocsForm
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from core.views.views import GenericFilteredListView, AjaxFilteredListView
-from core.views.mixins import RoleRequiredMixin
+from core.views.mixins import RoleRequiredMixin, RoleBasedAccessMixin, DynamicModelLoaderMixin, \
+    DetailViewMixin
 from accounts.models import ClientProfile
 
 
-class RoleBasedListView(RoleRequiredMixin, GenericFilteredListView):
-    client_field_in_model = "created_by"# Modelde client'i tutan field adı (default olarak created_by)
-
-    def get_queryset(self):
-        user = self.request.user
-
-        # Eğer kullanıcı müşteri ise sadece kendi ürünlerini/nesnelerini görür
-        if user.role == "client":
-            return self.model.objects.filter(**{self.client_field_in_model: user})
-
-        # Eğer kullanıcı müşavir ise ve bir müşteri seçmişse
-        elif user.role == "consultant":
-            active_client_id = self.request.session.get("active_client_id")
-
-            if active_client_id:
-                try:
-                    client = ClientProfile.objects.get(id=active_client_id)
-
-                    # Bu müşteri gerçekten bu müşavirin müşterisi mi?
-                    if client in user.consulted_clients.all():
-                        return self.model.objects.filter(**{self.client_field_in_model: client.user})
-                except ClientProfile.DoesNotExist:
-                    pass
-
-            return self.model.objects.none()
-
-        else:
-            return self.model.objects.filter()
+class ProductsGeneralModelListView(RoleBasedAccessMixin, DetailViewMixin,
+                                   GenericFilteredListView):
+    pass
 
 
 class BrandCreateView(RoleRequiredMixin, CreateView):
@@ -54,24 +30,29 @@ class ProductModelCreateView(RoleRequiredMixin, CreateView):
     success_url = reverse_lazy('model_page_view')
 
 
-class BrandListView(RoleBasedListView):
+class BrandListView(ProductsGeneralModelListView):
+    app_label = "products"
     model = Brand
-    template_name = 'products/brand_page.html'
+    template_name = 'products/products_general_page.html'
     context_object_name = 'brands'
     allowed_roles = ["client", "consultant"]
+    excluded_fields = ["id", "system_note", "created_at", "updated_at", "is_active", "created_by",
+                       "updated_by", "record_uuid"]
 
 
-class ProductModelListView(RoleBasedListView):
+class ProductModelListView(ProductsGeneralModelListView):
+    app_label = "products"
     model = ProductModel
-    template_name = 'products/model_page.html'
+    template_name = 'products/products_general_page.html'
     related_search_fields = ["brand__brand_name"]
     context_object_name = 'models'
     allowed_roles = ["client", "consultant"]
 
 
-class ProductsListView(RoleBasedListView):
+class ProductsListView(ProductsGeneralModelListView):
+    app_label = "products"
     model = Products
-    template_name = 'products/products_page.html'
+    template_name = 'products/products_general_page.html'
     related_search_fields = ["brand__brand_name"]
     context_object_name = 'products'
     allowed_roles = ["client", "consultant"]
@@ -99,9 +80,10 @@ class ProductsCreateView(RoleRequiredMixin, CreateView):
         return response
 
 
-class UploadedDocsListView(RoleBasedListView):
+class UploadedDocsListView(ProductsGeneralModelListView):
+    app_label = "products"
     model = UploadedDocuments
-    template_name = 'products/uploaded_docs_page.html'
+    template_name = 'products/products_general_page.html'
     context_object_name = 'uploaded_documents'
     allowed_roles = ["client", "consultant"]
 

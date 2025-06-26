@@ -13,12 +13,10 @@
     {{ model_display_name }} Ara...
 {% endblock %}
 
-
 {% block table_header %}
     <tr>
         {% for key in field_keys %}
             <th>{{ model_field_verbose_names|get_dict_value:key|default:key }}</th>
-
         {% endfor %}
     </tr>
 {% endblock %}
@@ -27,12 +25,8 @@
     {% for object in page_obj %}
         <tr>
             {% for key in field_keys %}
-                <td>
-                    {{ object|render_field:key|safe }}
-                </td>
+                <td>{{ object|render_field:key|safe }}</td>
             {% endfor %}
         </tr>
     {% endfor %}
 {% endblock %}
-
-

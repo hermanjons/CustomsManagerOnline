@@ -260,6 +260,15 @@ MODEL_FIELD_VERBOSE_NAMES = {
         'name': 'Adı',
         'data_source': 'Veri Kaynağı'
 
+    },
+    'brand': {
+        'brand_name': 'Kodu',
+        'brand_code': 'Adı',
+        'brand_activate_number': 'Veri Kaynağı',
+        'brand_logo' : 'Logo',
+        'activated_countries' : 'Aktif ülkeler',
+        'brand_description' : 'Marka açıklaması'
+
     }
 
 }
@@ -274,7 +283,8 @@ FK_M2M_REPRESENTATIVE_FIELDS = {
     "Bank": 'bank_name',
     "DataSource": 'name',
     'PaymentMethod': 'code',
-    'TransportType': 'code'
+    'TransportType': 'code',
+    'Brand': 'brand_name'
 }
 
 SYSTEM_FIELDS = [

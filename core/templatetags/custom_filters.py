@@ -35,6 +35,7 @@ def render_field(obj, field_name):
     if isinstance(field, (models.ForeignKey, models.OneToOneField)):
         if value is None:
             return "-"
+        print("değer:", value, value.pk)
         model_name = value.__class__.__name__
         representative_field = FK_M2M_REPRESENTATIVE_FIELDS.get(model_name)
         if representative_field:
@@ -56,20 +57,31 @@ def render_field(obj, field_name):
                     reps.append(
                         f'<button class="btn btn-outline-primary btn-sm" style="margin:2px;" '
                         f'onclick="openModelDetail(\'{model_name}\', {item.pk})">{rep_value}</button>')
+            print(reps)
             return ", ".join(reps) or "-"
         return ", ".join([str(item) for item in value.all()]) or "-"
 
     # 🔷 Görsel (ImageField)
     elif isinstance(field, models.ImageField):
-        if value:
-            return f'<img src="{value.url}" class="img-thumbnail" style="max-width: 100px;">'
+        try:
+            if value and hasattr(value, 'url'):
+                return f'<img src="{value.url}" class="img-thumbnail clickable-image" style="max-width: 100px;" data-image="{value.url}">'
+        except Exception:
+            pass
         return "-"
+
 
     # 🔷 Dosya (FileField)
     elif isinstance(field, models.FileField):
         if value:
-            return f'<a href="{value.url}" target="_blank">📄 Dosyayı Aç</a>'
+            return f'''
+                <a href="{value.url}" target="_blank" 
+                   class="btn btn-outline-primary btn-md" style="margin:2px;">
+                   📄 Görüntüle
+                </a>
+            '''
         return "-"
+
 
     # 🔷 Tarih/Saat formatı
     elif isinstance(field, (models.DateTimeField, models.DateField)):

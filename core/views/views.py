@@ -5,6 +5,7 @@ from django.views.generic import ListView
 from django.db.models import Q, TextField, CharField, ForeignKey, ManyToManyField
 from django.http import response, JsonResponse
 from core.constants import MODEL_ICONS, MODEL_FIELD_VERBOSE_NAMES
+from .mixins import RoleRequiredMixin
 
 
 class GenericFilteredListView(ListView):
@@ -130,3 +131,4 @@ class AjaxFilteredListView(GenericFilteredListView):
         # queryset'teki verileri JSON'a çevir
         data = list(context['object_list'].values())
         return JsonResponse({'results': data})
+

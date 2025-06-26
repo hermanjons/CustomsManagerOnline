@@ -83,7 +83,7 @@ class UploadedDocumentsBase(AuditModelWithSource):
     doc_file = models.FileField(upload_to=date_based_upload_path)
 
     def __str__(self):
-        return f"{self.doc_name} - {self.doc_type}"
+        return f"{self.doc_name}"
 
     class Meta:
         verbose_name = "Yüklenen Dökümanlar"

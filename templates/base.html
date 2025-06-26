@@ -287,6 +287,7 @@
 
 <script>
 function openModelDetail(modelName, objectId) {
+    alert("tıklandı")
     const urlTemplate = "{% url 'customs_general:fetch_model_detail' 'MODEL_NAME' 0 %}";
     const url = urlTemplate
         .replace('MODEL_NAME', modelName)
@@ -331,46 +332,43 @@ function openModelDetail(modelName, objectId) {
 </script>
 
 
-
-
-
-    <script>
-        $(document).ready(function() {
-            // Ürün İşlemleri submenu'sunu toggle et
-            $("#toggleProductsLink").click(function(e) {
-                e.preventDefault();
-                $("#productsSubmenu").slideToggle();
-            });
-            // Genel Tanımlamalar submenu'sunu toggle et
-            $("#toggleGeneralDefinitionsLink").click(function(e) {
-                e.preventDefault();
-                $("#generalDefinitionsList").slideToggle();
-            });
-            // Diğer submenu'sunu toggle et
-            $("#toggleDigerLink").click(function(e) {
-                e.preventDefault();
-                $("#digerSubmenu").slideToggle();
-            });
+<script>
+    $(document).ready(function() {
+        // Ürün İşlemleri submenu'sunu toggle et
+        $("#toggleProductsLink").click(function(e) {
+            e.preventDefault();
+            $("#productsSubmenu").slideToggle();
         });
+        // Genel Tanımlamalar submenu'sunu toggle et
+        $("#toggleGeneralDefinitionsLink").click(function(e) {
+            e.preventDefault();
+            $("#generalDefinitionsList").slideToggle();
+        });
+        // Diğer submenu'sunu toggle et
+        $("#toggleDigerLink").click(function(e) {
+            e.preventDefault();
+            $("#digerSubmenu").slideToggle();
+        });
+    });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            function bindImageClicks(selector) {
-                var images = document.querySelectorAll(selector);
-                images.forEach(function(img) {
-                    img.addEventListener('click', function() {
-                        var modalImage = document.getElementById('modalImage');
-                        modalImage.src = this.getAttribute('data-image') || this.src;
-                        var modal = new bootstrap.Modal(document.getElementById('imageModal'));
-                        modal.show();
-                    });
+    document.addEventListener("DOMContentLoaded", function() {
+        function bindImageClicks(selector) {
+            var images = document.querySelectorAll(selector);
+            images.forEach(function(img) {
+                img.addEventListener('click', function() {
+                    var modalImage = document.getElementById('modalImage');
+                    modalImage.src = this.getAttribute('data-image') || this.src;
+                    var modal = new bootstrap.Modal(document.getElementById('imageModal'));
+                    modal.show();
                 });
-            }
+            });
+        }
 
-            bindImageClicks('.clickable-image');
-            bindImageClicks('.clickable-product-image');
+        bindImageClicks('.clickable-image');
+        bindImageClicks('.clickable-product-image');
 
-            twemoji.parse(document.body);
-        });
-    </script>
+        twemoji.parse(document.body);
+    });
+</script>
 </body>
 </html>
